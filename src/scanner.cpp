@@ -4,15 +4,6 @@
 
 using namespace lox;
 
-#if 0
-std::ostream& operator<<(std::ostream& os, const Token& token)
-{
-    os << get_token_string_repr(token.type_) << " " << token.lexeme_ << std::endl;
-    return os;
-}
-
-#endif
-
 void Scanner::add_token(const TokenType type)
 {
     std::string text = program_.substr(start, current-start);
