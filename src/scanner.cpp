@@ -6,8 +6,8 @@ using namespace lox;
 
 void Scanner::add_token(const TokenType type)
 {
-    std::string text = program_.substr(start, current-start);
-    tokens_.emplace_back(type, text, line);
+    std::string lexeme = program_.substr(start, current-start);
+    add_token(type, std::move(lexeme));
 }
 
 char Scanner::advance()
@@ -105,7 +105,7 @@ void Scanner::identifier()
 {
     for(; Scanner::is_alphanum(peek<0>()); advance());
 
-    const std::string text = program_.substr(start, current);
+    const std::string text = program_.substr(start, current-start);
     const auto it = keywords_.find(text);
     add_token(it != keywords_.end() ? it->second : TokenType::IDENTIFIER);
 }
@@ -114,6 +114,7 @@ void Scanner::number()
 {
     for(; isdigit(peek<0>()); advance());
 
+    // check if the number is real or just integer
     if (peek<0>() == '.' && isdigit(peek<1>())) {
         advance();
         for (; isdigit(peek<0>()); advance());

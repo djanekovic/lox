@@ -83,8 +83,10 @@ class Token {
     }
 
 public:
-    Token(TokenType type, const std::string& lexeme, int line):
-        type_{type}, lexeme_{lexeme}, line_{line} {}
+    template<typename String,
+             typename = std::enable_if_t<std::is_convertible_v<String, std::string>>>
+    Token(TokenType type, String lexeme, int line):
+        type_{type}, lexeme_(std::forward<String>(lexeme)), line_{line} {}
 
     std::string to_string() const {
         return fmt::format("[{} {} {}]", Token::get_token_type_string(type_), lexeme_, line_);
@@ -123,6 +125,13 @@ private:
     bool is_end() const;
     bool match(const char c);
     void add_token(const TokenType type);
+
+    template<typename String,
+             typename = std::enable_if_t<std::is_convertible_v<String, std::string>>>
+    void add_token(const TokenType type, String&& lexeme)
+    {
+        tokens_.emplace_back(type, std::forward<String>(lexeme), line);
+    }
     char advance();
     void scan_token();
     template<size_t LookAhead> char peek() const;
@@ -137,6 +146,4 @@ public:
     Scanner(std::string program): program_{std::move(program)} {}
     std::vector<Token> scan_tokens();
 };
-
 } // namespace lox
-
