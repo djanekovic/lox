@@ -8,9 +8,9 @@ void run(std::string command)
 {
     lox::Scanner scanner(std::move(command));
 
-    auto tokens = scanner.scan_tokens();
+    const auto tokens = scanner.scan_tokens();
 
-    for (auto &token : tokens) {
+    for (const auto &token : tokens) {
         std::cout << token.to_string() << std::endl;
     }
 }
