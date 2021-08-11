@@ -1,4 +1,5 @@
 #pragma once
+#include <variant>
 #include <memory>
 
 //Forward declaration for accept method in Expr
@@ -12,6 +13,8 @@ struct Expr {
 
 
 // Forward declarations we will need
+class NumberExpr;
+class BooleanExpr;
 class LiteralExpr;
 class GroupingExpr;
 class UnaryExpr;
@@ -24,8 +27,9 @@ struct Visitor {
     virtual void visit_binary_node(const BinaryExpr& node) = 0;
 };
 
+
 struct LiteralExpr: public Expr {
-    const std::string literal_;
+    std::string literal_;
 
     explicit LiteralExpr(std::string literal):
         literal_{std::move(literal)} {}
@@ -46,11 +50,11 @@ struct GroupingExpr: public Expr {
     }
 };
 
-enum class UnaryOperator {
-    BANG, MINUS
-};
-
 struct UnaryExpr: public Expr {
+    enum class UnaryOperator {
+        BANG, MINUS
+    };
+
     const UnaryOperator op_;
     const std::unique_ptr<Expr> expr_;
 
@@ -62,14 +66,14 @@ struct UnaryExpr: public Expr {
     }
 };
 
-enum class BinaryOperator {
-    EQUAL_EQUAL, BANG_EQUAL,
-    LESS, LESS_EQUAL, GREATER, GREATER_EQUAL,
-    PLUS, MINUS, STAR, SLASH,
-    AND, OR
-};
-
 struct BinaryExpr: public Expr {
+    enum class BinaryOperator {
+        EQUAL_EQUAL, BANG_EQUAL,
+        LESS, LESS_EQUAL, GREATER, GREATER_EQUAL,
+        PLUS, MINUS, STAR, SLASH,
+        AND, OR
+    };
+
     const BinaryOperator op_;
     const std::unique_ptr<Expr> lhs_;
     const std::unique_ptr<Expr> rhs_;
@@ -80,18 +84,4 @@ struct BinaryExpr: public Expr {
     void accept(Visitor& visitor) const override {
         visitor.visit_binary_node(*this);
     }
-};
-
-class ASTPrettyPrinter: public Visitor {
-    std::string format;
-
-public:
-    ASTPrettyPrinter() = default;
-
-    void visit_literal_node(const LiteralExpr& node) override;
-    void visit_grouping_node(const GroupingExpr& node) override;
-    void visit_unary_node(const UnaryExpr& node) override;
-    void visit_binary_node(const BinaryExpr& node) override;
-
-    std::string to_string() const { return format; }
 };

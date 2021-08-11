@@ -1,6 +1,8 @@
 #include <iostream>
 #include <memory>
 #include "scanner.h"
+#include "parser.h"
+#include "ast_pretty_printer.h"
 #include "lox.h"
 
 
@@ -8,11 +10,18 @@ void run(std::string command)
 {
     lox::Scanner scanner(std::move(command));
 
-    const auto tokens = scanner.scan_tokens();
+    auto tokens = scanner.scan_tokens();
+    lox::Parser parser(std::move(tokens));
+    auto expression = parser.parse();
 
-    for (const auto &token : tokens) {
-        std::cout << token.to_string() << std::endl;
+    if (lox::Lox::had_error) {
+        return;
     }
+
+    lox::ASTPrettyPrinter printer;
+    expression->accept(printer);
+
+    std::cout << printer.to_string() << std::endl;
 }
 
 

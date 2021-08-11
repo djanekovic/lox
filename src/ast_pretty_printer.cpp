@@ -1,13 +1,15 @@
-#include "expr.h"
 #include <fmt/core.h>
+#include "ast_pretty_printer.h"
+
+using namespace lox;
 
 void ASTPrettyPrinter::visit_unary_node(const UnaryExpr& node)
 {
     const char op = [](const auto op) {
         switch(op) {
-            case UnaryOperator::MINUS:
+            case UnaryExpr::UnaryOperator::MINUS:
                 return '-';
-            case UnaryOperator::BANG:
+            case UnaryExpr::UnaryOperator::BANG:
                 return '!';
         }
         __builtin_unreachable();
@@ -22,29 +24,29 @@ void ASTPrettyPrinter::visit_binary_node(const BinaryExpr& node)
 {
     const char *op = [](const auto op) {
         switch(op) {
-            case BinaryOperator::AND:
+            case BinaryExpr::BinaryOperator::AND:
                 return "and";
-            case BinaryOperator::BANG_EQUAL:
+            case BinaryExpr::BinaryOperator::BANG_EQUAL:
                 return "!=";
-            case BinaryOperator::EQUAL_EQUAL:
+            case BinaryExpr::BinaryOperator::EQUAL_EQUAL:
                 return "==";
-            case BinaryOperator::GREATER:
+            case BinaryExpr::BinaryOperator::GREATER:
                 return ">";
-            case BinaryOperator::GREATER_EQUAL:
+            case BinaryExpr::BinaryOperator::GREATER_EQUAL:
                 return ">=";
-            case BinaryOperator::LESS:
+            case BinaryExpr::BinaryOperator::LESS:
                 return "<";
-            case BinaryOperator::LESS_EQUAL:
+            case BinaryExpr::BinaryOperator::LESS_EQUAL:
                 return "<=";
-            case BinaryOperator::MINUS:
+            case BinaryExpr::BinaryOperator::MINUS:
                 return "-";
-            case BinaryOperator::OR:
+            case BinaryExpr::BinaryOperator::OR:
                 return "OR";
-            case BinaryOperator::PLUS:
+            case BinaryExpr::BinaryOperator::PLUS:
                 return "+";
-            case BinaryOperator::SLASH:
+            case BinaryExpr::BinaryOperator::SLASH:
                 return "/";
-            case BinaryOperator::STAR:
+            case BinaryExpr::BinaryOperator::STAR:
                 return "*";
 
         }

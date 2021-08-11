@@ -6,5 +6,5 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 add_subdirectory(extern/fmt)
 
 include_directories(extern/fmt/include)
-add_executable(lox src/main.cpp src/scanner.cpp src/pretty_printer.cpp)
+add_executable(lox src/main.cpp src/scanner.cpp src/ast_pretty_printer.cpp src/parser.cpp)
 target_link_libraries(lox fmt::fmt)
