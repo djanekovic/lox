@@ -51,11 +51,8 @@ private:
     void number();
     void identifier();
 
-    static bool is_alpha(const char c);
-    static bool is_alphanum(const char c);
-
 public:
-    Scanner(std::string program): program_{std::move(program)} {}
+    explicit Scanner(std::string&& program): program_{std::move(program)} {}
     std::vector<Token> scan_tokens();
 };
 } // namespace lox

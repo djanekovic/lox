@@ -11,7 +11,7 @@ std::unique_ptr<Expr> Parser::parse()
 {
     try {
         return expression();
-    } catch (ParseError error) {
+    } catch (ParseError& error) {
         return nullptr;
     }
 }
@@ -240,7 +240,7 @@ void Parser::synchronize()
 template<size_t N>
 bool Parser::match(std::array<TokenType, N> tokens)
 {
-    if (std::find_if(tokens.cbegin(), tokens.cend(), std::bind(&Parser::check, this, std::placeholders::_1)) != tokens.cend()) {
+    if (std::find_if(tokens.cbegin(), tokens.cend(), [&](const auto& t) { return check(t); }) != tokens.cend()) {
         advance();
         return true;
     }

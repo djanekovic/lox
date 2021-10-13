@@ -1,6 +1,7 @@
 #pragma once
 #include <variant>
 #include <memory>
+#include <string>
 
 //Forward declaration for accept method in Expr
 class Visitor;

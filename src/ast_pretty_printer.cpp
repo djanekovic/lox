@@ -1,3 +1,4 @@
+#include <functional>
 #include <fmt/core.h>
 #include "ast_pretty_printer.h"
 
@@ -5,15 +6,15 @@ using namespace lox;
 
 void ASTPrettyPrinter::visit_unary_node(const UnaryExpr& node)
 {
-    const char op = [](const auto op) {
-        switch(op) {
+    const char op = std::invoke([&] {
+        switch(node.op_) {
             case UnaryExpr::UnaryOperator::MINUS:
                 return '-';
             case UnaryExpr::UnaryOperator::BANG:
                 return '!';
         }
         __builtin_unreachable();
-    }(node.op_);
+    });
 
     // traverse down
     node.expr_->accept(*this);
@@ -22,8 +23,8 @@ void ASTPrettyPrinter::visit_unary_node(const UnaryExpr& node)
 
 void ASTPrettyPrinter::visit_binary_node(const BinaryExpr& node)
 {
-    const char *op = [](const auto op) {
-        switch(op) {
+    const char *op = std::invoke([&] {
+        switch(node.op_) {
             case BinaryExpr::BinaryOperator::AND:
                 return "and";
             case BinaryExpr::BinaryOperator::BANG_EQUAL:
@@ -48,10 +49,9 @@ void ASTPrettyPrinter::visit_binary_node(const BinaryExpr& node)
                 return "/";
             case BinaryExpr::BinaryOperator::STAR:
                 return "*";
-
         }
         __builtin_unreachable();
-    }(node.op_);
+    });
 
     // traverse the left side of the tree in DFS fashion
     node.lhs_->accept(*this);

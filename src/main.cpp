@@ -1,12 +1,14 @@
 #include <iostream>
 #include <memory>
+#include <fmt/core.h>
+
 #include "scanner.h"
 #include "parser.h"
 #include "ast_pretty_printer.h"
 #include "lox.h"
 
 
-void run(std::string command)
+void run(std::string&& command)
 {
     lox::Scanner scanner(std::move(command));
 
@@ -21,18 +23,17 @@ void run(std::string command)
     lox::ASTPrettyPrinter printer;
     expression->accept(printer);
 
-    std::cout << printer.to_string() << std::endl;
+    fmt::print("{}\n", printer.to_string());
 }
 
 
 int run_prompt()
 {
     for (;;) {
-        std::string command;
-
-        std::cout << "> " << std::flush;
+        fmt::print("> ");
 
         // ^D to exit
+        std::string command;
         std::getline(std::cin, command);
         if (command.empty()) {
             break;
@@ -41,11 +42,11 @@ int run_prompt()
         run(std::move(command));
 
         if (lox::Lox::had_error) {
-            break;
+            return 65;
         }
     }
 
-    return lox::Lox::had_error ? 65 : 0;
+    return 0;
 }
 
 int run_file(const char *filename)
@@ -58,7 +59,7 @@ int run_file(const char *filename)
         std::fseek(f.get(), 0, SEEK_SET);
         std::fread(filecontents.data(), sizeof(char), filecontents.size(), f.get());
     } else {
-        std::cerr << "Failed reading file " << filename << std::endl;
+        fmt::print(stderr, "Failed reading file {}\n", filename);
         return 1;
     }
 
@@ -70,11 +71,14 @@ int run_file(const char *filename)
 int main(int argc, char **argv)
 {
     if (argc > 2) {
-        std::cerr << "Usage: " << argv[0] << " [script]" << std::endl;
+        // more than one arg
+        fmt::print(stderr, "Usage {} [script]\n", argv[0]);
         return 1;
     } else if (argc == 1) {
+        // no args
         return run_prompt();
     } else {
+        // we have one arg
         return run_file(argv[1]);
     }
 }

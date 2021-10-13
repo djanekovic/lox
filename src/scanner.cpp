@@ -1,3 +1,4 @@
+#include <cctype>
 #include <vector>
 #include "scanner.h"
 #include "lox.h"
@@ -82,7 +83,7 @@ void Scanner::scan_token()
         default:
             if (std::isdigit(c)) {
                 number();
-            } else if (Scanner::is_alpha(c)) {
+            } else if (std::isalnum(c) || c == '_') {
                 identifier();
             } else {
                 Lox::error(line, "Unexpected character");
@@ -91,19 +92,9 @@ void Scanner::scan_token()
     }
 }
 
-bool Scanner::is_alpha(const char c)
-{
-    return std::isalpha(c) || c == '_';
-}
-
-bool Scanner::is_alphanum(const char c)
-{
-    return std::isalnum(c) || c == '_';
-}
-
 void Scanner::identifier()
 {
-    for(; Scanner::is_alphanum(peek<0>()); advance());
+    for(; std::isalnum(peek<0>()) || peek<0>() == '_'; advance());
 
     const std::string text = program_.substr(start, current-start);
     const auto it = keywords_.find(text);

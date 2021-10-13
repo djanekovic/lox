@@ -35,7 +35,7 @@ class Parser {
     template<size_t N> bool match(std::array<TokenType, N> tokens);
 
 public:
-    explicit Parser(std::vector<Token> tokens):
+    explicit Parser(std::vector<Token>&& tokens):
         tokens_{std::move(tokens)} {}
 
     std::unique_ptr<Expr> parse();
