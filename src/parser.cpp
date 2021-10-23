@@ -1,7 +1,10 @@
 #include <cassert>
+#include <memory>
 #include <numeric>
 #include <functional>
 #include <stdexcept>
+#include <string>
+#include <variant>
 #include "lox.h"
 #include "parser.h"
 
@@ -13,36 +16,6 @@ std::unique_ptr<Expr> Parser::parse()
         return expression();
     } catch (ParseError& error) {
         return nullptr;
-    }
-}
-
-BinaryExpr::BinaryOperator from_type_to_binary_op(const TokenType type)
-{
-    switch(type) {
-        case TokenType::AND: return BinaryExpr::BinaryOperator::AND;
-        case TokenType::BANG_EQUAL: return BinaryExpr::BinaryOperator::BANG_EQUAL;
-        case TokenType::EQUAL_EQUAL: return BinaryExpr::BinaryOperator::EQUAL_EQUAL;
-        case TokenType::GREATER: return BinaryExpr::BinaryOperator::GREATER;
-        case TokenType::GREATER_EQUAL: return BinaryExpr::BinaryOperator::GREATER_EQUAL;
-        case TokenType::LESS: return BinaryExpr::BinaryOperator::LESS;
-        case TokenType::LESS_EQUAL: return BinaryExpr::BinaryOperator::LESS_EQUAL;
-        case TokenType::MINUS: return BinaryExpr::BinaryOperator::MINUS;
-        case TokenType::OR: return BinaryExpr::BinaryOperator::OR;
-        case TokenType::PLUS: return BinaryExpr::BinaryOperator::PLUS;
-        case TokenType::SLASH: return BinaryExpr::BinaryOperator::SLASH;
-        case TokenType::STAR: return BinaryExpr::BinaryOperator::STAR;
-        default:
-            assert(false && "Type is not a BinaryOperator");
-    }
-}
-
-UnaryExpr::UnaryOperator from_type_to_unary_op(const TokenType type)
-{
-    switch(type) {
-        case TokenType::BANG: return UnaryExpr::UnaryOperator::BANG;
-        case TokenType::MINUS: return UnaryExpr::UnaryOperator::MINUS;
-        default:
-            assert(false && "Type is not a UnaryOperator");
     }
 }
 
@@ -66,7 +39,7 @@ std::unique_ptr<Expr> Parser::equality()
     while(match(std::array{TokenType::BANG_EQUAL, TokenType::EQUAL_EQUAL})) {
         auto op = previous();
         auto right = comparison();
-        expr = std::make_unique<BinaryExpr>(from_type_to_binary_op(op.type_), std::move(expr), std::move(right));
+        expr = std::make_unique<BinaryExpr>(std::move(op), std::move(expr), std::move(right));
     }
 
     return expr;
@@ -83,7 +56,7 @@ std::unique_ptr<Expr> Parser::comparison()
     while(match(std::array{TokenType::GREATER, TokenType::GREATER_EQUAL, TokenType::LESS, TokenType::LESS_EQUAL})) {
         auto op = previous();
         auto right = term();
-        expr = std::make_unique<BinaryExpr>(from_type_to_binary_op(op.type_), std::move(expr), std::move(right));
+        expr = std::make_unique<BinaryExpr>(std::move(op), std::move(expr), std::move(right));
     }
 
     return expr;
@@ -100,7 +73,7 @@ std::unique_ptr<Expr> Parser::term()
     while(match(std::array{TokenType::PLUS, TokenType::MINUS})) {
         auto op = previous();
         auto right = factor();
-        expr = std::make_unique<BinaryExpr>(from_type_to_binary_op(op.type_), std::move(expr), std::move(right));
+        expr = std::make_unique<BinaryExpr>(std::move(op), std::move(expr), std::move(right));
     }
 
     return expr;
@@ -117,7 +90,7 @@ std::unique_ptr<Expr> Parser::factor()
     while(match(std::array{TokenType::SLASH, TokenType::STAR})) {
         auto op = previous();
         auto right = unary();
-        expr = std::make_unique<BinaryExpr>(from_type_to_binary_op(op.type_), std::move(expr), std::move(right));
+        expr = std::make_unique<BinaryExpr>(std::move(op), std::move(expr), std::move(right));
     }
 
     return expr;
@@ -132,7 +105,7 @@ std::unique_ptr<Expr> Parser::unary()
     if (match(std::array{TokenType::BANG, TokenType::MINUS})) {
         auto op = previous();
         auto right = unary();
-        return std::make_unique<UnaryExpr>(from_type_to_unary_op(op.type_), std::move(right));
+        return std::make_unique<UnaryExpr>(std::move(op), std::move(right));
     }
 
     return primary();
@@ -145,19 +118,22 @@ std::unique_ptr<Expr> Parser::unary()
 std::unique_ptr<Expr> Parser::primary()
 {
     if (match(std::array{TokenType::FALSE})) {
-        return std::make_unique<LiteralExpr>("false");
+        return std::make_unique<LiteralExpr>(false);
     }
 
     if (match(std::array{TokenType::TRUE})) {
-        return std::make_unique<LiteralExpr>("true");
+        return std::make_unique<LiteralExpr>(true);
     }
 
     if (match(std::array{TokenType::NIL})) {
-        return std::make_unique<LiteralExpr>("nil");
+        return std::make_unique<LiteralExpr>(std::monostate());
     }
 
-    if (match(std::array{TokenType::NUMBER, TokenType::STRING})) {
-        return std::make_unique<LiteralExpr>(previous().lexeme_);
+    if (match(std::array{TokenType::NUMBER})) {
+        return std::make_unique<LiteralExpr>(std::get<double>(previous().lexeme_));
+    }
+    if (match(std::array{TokenType::STRING})) {
+        return std::make_unique<LiteralExpr>(std::get<std::string>(previous().lexeme_));
     }
 
     if (match(std::array{TokenType::LEFT_PAREN})) {

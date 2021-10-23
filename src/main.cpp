@@ -5,8 +5,13 @@
 #include "scanner.h"
 #include "parser.h"
 #include "ast_pretty_printer.h"
+#include "interpreter.h"
 #include "lox.h"
 
+namespace {
+// we want to reuse this object
+static lox::Interpreter interpreter;
+} // anonymous namespace
 
 void run(std::string&& command)
 {
@@ -20,10 +25,14 @@ void run(std::string&& command)
         return;
     }
 
+#if 0
     lox::ASTPrettyPrinter printer;
     expression->accept(printer);
 
     fmt::print("{}\n", printer.to_string());
+#endif
+
+    interpreter.interpret(std::move(expression));
 }
 
 
@@ -65,7 +74,15 @@ int run_file(const char *filename)
 
     run(std::move(filecontents));
 
-    return lox::Lox::had_error ? 65 : 0;
+    if (lox::Lox::had_error) {
+        return 65;
+    }
+
+    if (lox::Lox::had_runtime_error) {
+        return 70;
+    }
+
+    return 0;
 }
 
 int main(int argc, char **argv)

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <variant>
 #include <fmt/core.h>
 
 namespace lox {
@@ -26,12 +27,74 @@ enum class TokenType {
 };
 
 
+
 struct Token {
+    struct PrinterVisitor {
+        std::string operator()(std::monostate value) { return "nil"; }
+        std::string operator()(const std::string& value) { return value; }
+        std::string operator()(double value) { return std::to_string(value); }
+        std::string operator()(bool value) { return value ? "true" : "false"; }
+    };
+
     const TokenType type_;
-    const std::string lexeme_;
+
+    // we are using monostate as nil!
+    const std::variant<std::monostate, bool, double, std::string> lexeme_;
     const int line_;
+
+    std::string stringify_token() const {
+        switch(type_) {
+            case TokenType::LEFT_PAREN:     return "(";
+            case TokenType::RIGHT_PAREN:    return ")";
+            case TokenType::LEFT_BRACE:     return "[";
+            case TokenType::RIGHT_BRACE:    return "]";
+            case TokenType::COMMA:          return ",";
+            case TokenType::DOT:            return ".";
+            case TokenType::MINUS:          return "-";
+            case TokenType::PLUS:           return "+";
+            case TokenType::SEMICOLON:      return ";";
+            case TokenType::SLASH:          return "/";
+            case TokenType::STAR:           return "*";
+
+            case TokenType::BANG:           return "!";
+            case TokenType::EQUAL:          return "=";
+            case TokenType::GREATER:        return ">";
+            case TokenType::LESS:           return "<";
+
+            case TokenType::BANG_EQUAL:     return "!=";
+            case TokenType::EQUAL_EQUAL:    return "==";
+            case TokenType::GREATER_EQUAL:  return ">=";
+            case TokenType::LESS_EQUAL:     return "<=";
+
+            case TokenType::IDENTIFIER:     return std::get<std::string>(lexeme_);
+            case TokenType::STRING:         return fmt::format("\"{}\"", std::get<std::string>(lexeme_));
+            case TokenType::NUMBER:         return std::to_string(std::get<double>(lexeme_));
+
+            case TokenType::AND:            return "and";
+            case TokenType::CLASS:          return "class";
+            case TokenType::ELSE:           return "else";
+            case TokenType::FALSE:          return "false";
+            case TokenType::FOR:            return "for";
+            case TokenType::FUN:            return "fun";
+            case TokenType::IF:             return "if";
+            case TokenType::NIL:            return "nil";
+            case TokenType::OR:             return "or";
+            case TokenType::PRINT:          return "print";
+            case TokenType::RETURN:         return "return";
+            case TokenType::SUPER:          return "super";
+            case TokenType::THIS:           return "this";
+            case TokenType::TRUE:           return "true";
+            case TokenType::VAR:            return "var";
+            case TokenType::WHILE:          return "while";
+
+            case TokenType::END:            return "";
+        }
+
+        __builtin_unreachable();
+    }
+
     private:
-    static std::string get_token_type_string(const TokenType type) {
+    static std::string_view get_token_type_string(const TokenType type) {
         switch(type) {
             case TokenType::LEFT_PAREN:     return "LEFT_PAREN";
             case TokenType::RIGHT_PAREN:    return "RIGHT_PAREN";
@@ -83,13 +146,16 @@ struct Token {
     }
 
 public:
-    template<typename String,
-             typename = std::enable_if_t<std::is_convertible_v<String, std::string>>>
-    Token(TokenType type, String lexeme, int line):
-        type_{type}, lexeme_(std::forward<String>(lexeme)), line_{line} {}
+    Token(): Token(TokenType::END, 0) {}
+
+    Token(TokenType type, int line): Token(type, std::monostate(), line) {}
+
+    template<typename LexemeType>
+    Token(TokenType type, LexemeType lexeme, int line):
+        type_{type}, lexeme_(std::forward<LexemeType>(lexeme)), line_{line} {}
 
     std::string to_string() const {
-        return fmt::format("[{} {} {}]", Token::get_token_type_string(type_), lexeme_, line_);
+        return fmt::format("[{} {} {}]", Token::get_token_type_string(type_), stringify_token(), line_);
     }
 };
 } //namespace lox

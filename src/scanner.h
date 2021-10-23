@@ -38,12 +38,14 @@ private:
     bool match(const char c);
     void add_token(const TokenType type);
 
-    template<typename String,
-             typename = std::enable_if_t<std::is_convertible_v<String, std::string>>>
-    void add_token(const TokenType type, String&& lexeme)
+    // Call this function for tokens that have lexemes we need to remember
+    // IDENTIFIER, STRING and NUMBER
+    template<typename LexemeType>
+    void add_token(const TokenType type, LexemeType&& lexeme)
     {
-        tokens_.emplace_back(type, std::forward<String>(lexeme), line);
+        tokens_.emplace_back(type, std::forward<LexemeType>(lexeme), line);
     }
+
     char advance();
     void scan_token();
     template<size_t LookAhead> char peek() const;

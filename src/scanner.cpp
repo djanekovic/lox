@@ -1,4 +1,5 @@
 #include <cctype>
+#include <variant>
 #include <vector>
 #include "scanner.h"
 #include "lox.h"
@@ -7,8 +8,20 @@ using namespace lox;
 
 void Scanner::add_token(const TokenType type)
 {
-    std::string lexeme = program_.substr(start, current-start);
-    add_token(type, std::move(lexeme));
+    // These are the only tokens that need lexemes
+    if (type == TokenType::IDENTIFIER or type == TokenType::STRING or type == TokenType::NUMBER) {
+        std::string lexeme = program_.substr(start, current-start);
+        if (type == TokenType::NUMBER) {
+            return add_token(type, std::stod(lexeme));
+        } else if (type == TokenType::STRING) {
+            // skip first " and total string has length: size - 2
+            lexeme = lexeme.substr(1, lexeme.size() - 2);
+        }
+        return add_token(type, std::move(lexeme));
+    }
+
+    // we don't need lexeme so just pass std::monostate as nothing
+    add_token(type, std::monostate());
 }
 
 char Scanner::advance()

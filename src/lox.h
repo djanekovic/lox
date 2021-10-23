@@ -1,12 +1,21 @@
 #pragma once
 
 #include <string>
+#include <variant>
 #include <fmt/core.h>
 #include "token.h"
 
 namespace lox {
 struct Lox {
+    struct RuntimeError: public std::runtime_error {
+        const Token token_;
+
+        RuntimeError(Token token, const char *message):
+            std::runtime_error(message), token_{std::move(token)} {}
+    };
+
     inline static bool had_error = false;
+    inline static bool had_runtime_error = false;
 
     static void error(Token token, std::string message) {
         if (token.type_ == TokenType::END) {
@@ -20,6 +29,11 @@ struct Lox {
     static void error(int line, const std::string& message) {
         report(line, "", message);
         had_error = true;
+    }
+
+    static void runtime_error(const RuntimeError& error) {
+        fmt::print(stderr, "{}\n[line {}]\n", error.what(), error.token_.line_);
+        had_runtime_error = true;
     }
 
     private:

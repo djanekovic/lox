@@ -3,8 +3,11 @@
 #include <memory>
 #include <string>
 
+#include "token.h"
+
+namespace lox {
 //Forward declaration for accept method in Expr
-class Visitor;
+struct Visitor;
 
 struct Expr {
     virtual ~Expr() = default;
@@ -14,12 +17,10 @@ struct Expr {
 
 
 // Forward declarations we will need
-class NumberExpr;
-class BooleanExpr;
-class LiteralExpr;
-class GroupingExpr;
-class UnaryExpr;
-class BinaryExpr;
+struct LiteralExpr;
+struct GroupingExpr;
+struct UnaryExpr;
+struct BinaryExpr;
 
 struct Visitor {
     virtual void visit_literal_node(const LiteralExpr& node) = 0;
@@ -30,10 +31,12 @@ struct Visitor {
 
 
 struct LiteralExpr: public Expr {
-    std::string literal_;
+    using LiteralType = std::variant<std::monostate, double, std::string, bool>;
+    LiteralType literal_;
 
-    explicit LiteralExpr(std::string literal):
-        literal_{std::move(literal)} {}
+    template<typename LiteralType>
+    explicit LiteralExpr(LiteralType&& literal):
+        literal_{std::forward<LiteralType>(literal)} {}
 
     void accept(Visitor& visitor) const override {
         visitor.visit_literal_node(*this);
@@ -52,15 +55,11 @@ struct GroupingExpr: public Expr {
 };
 
 struct UnaryExpr: public Expr {
-    enum class UnaryOperator {
-        BANG, MINUS
-    };
-
-    const UnaryOperator op_;
+    const Token op_;
     const std::unique_ptr<Expr> expr_;
 
-    UnaryExpr(const UnaryOperator op, std::unique_ptr<Expr> expr):
-        op_{op}, expr_{std::move(expr)} {}
+    UnaryExpr(const Token op, std::unique_ptr<Expr> expr):
+        op_{std::move(op)}, expr_{std::move(expr)} {}
 
     void accept(Visitor& visitor) const override {
         visitor.visit_unary_node(*this);
@@ -68,21 +67,15 @@ struct UnaryExpr: public Expr {
 };
 
 struct BinaryExpr: public Expr {
-    enum class BinaryOperator {
-        EQUAL_EQUAL, BANG_EQUAL,
-        LESS, LESS_EQUAL, GREATER, GREATER_EQUAL,
-        PLUS, MINUS, STAR, SLASH,
-        AND, OR
-    };
-
-    const BinaryOperator op_;
+    const Token op_;
     const std::unique_ptr<Expr> lhs_;
     const std::unique_ptr<Expr> rhs_;
 
-    BinaryExpr(const BinaryOperator op, std::unique_ptr<Expr> lhs, std::unique_ptr<Expr> rhs):
-        op_{op}, lhs_{std::move(lhs)}, rhs_{std::move(rhs)} {}
+    BinaryExpr(Token op, std::unique_ptr<Expr> lhs, std::unique_ptr<Expr> rhs):
+        op_{std::move(op)}, lhs_{std::move(lhs)}, rhs_{std::move(rhs)} {}
 
     void accept(Visitor& visitor) const override {
         visitor.visit_binary_node(*this);
     }
 };
+} // namespace lox
