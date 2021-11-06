@@ -11,6 +11,43 @@
 
 using namespace lox;
 
+std::vector<std::unique_ptr<Stmt>> Parser::parse()
+{
+    std::vector<std::unique_ptr<Stmt>> statements;
+    while(!is_end()) {
+        statements.emplace_back(statement());
+    }
+
+    return statements;
+}
+
+
+std::unique_ptr<Stmt> Parser::statement() {
+    if (match(std::array{TokenType::PRINT})) {
+        return print_statement();
+    }
+
+    return expression_statement();
+}
+
+
+/**
+ * print_statement -> "print" expression ";"
+ */
+std::unique_ptr<Stmt> Parser::print_statement() {
+    auto expr = expression();
+    consume(TokenType::SEMICOLON, "Expect ; after value");
+    return std::make_unique<PrintStmt>(std::move(expr));
+}
+
+/**
+ * expression_statement -> expression ";"
+ */
+std::unique_ptr<Stmt> Parser::expression_statement() {
+    auto expr = expression();
+    consume(TokenType::SEMICOLON, "Expect ; after value");
+    return std::make_unique<ExpressionStmt>(std::move(expr));
+}
 
 
 /**
@@ -20,6 +57,7 @@ std::unique_ptr<Expr> Parser::expression()
 {
     return equality();
 }
+
 
 
 /**

@@ -1,11 +1,41 @@
 #include <cassert>
 #include <type_traits>
-#include <variant>
 
 #include "interpreter.h"
-#include "parser.h"
 
 using namespace lox;
+
+void Interpreter::interpret(std::vector<std::unique_ptr<Stmt>> statements) {
+    try {
+        for(auto& statement: statements) {
+            execute(std::move(statement));
+        }
+    } catch (Lox::RuntimeError& ex) {
+        Lox::runtime_error(ex);
+    }
+}
+
+
+/** Handle statements **/
+void Interpreter::execute(std::unique_ptr<Stmt> statement) {
+    statement->accept(*this);
+}
+
+void Interpreter::visit_expression_stmt(const ExpressionStmt& stmt) {
+    evaluate(*stmt.expression_);
+}
+
+void Interpreter::visit_print_stmt(const PrintStmt& stmt) {
+    evaluate(*stmt.expression_);
+    fmt::print("{}\n", std::visit(Token::PrinterVisitor(), value_));
+}
+
+
+/** Handle expressions **/
+void Interpreter::evaluate(const Expr& expression) {
+    expression.accept(*this);
+}
+
 void Interpreter::visit_literal_node(const LiteralExpr& expr) {
     value_ = expr.literal_;
 }
@@ -15,7 +45,7 @@ void Interpreter::visit_grouping_node(const GroupingExpr& expr) {
     expr.expr_->accept(*this);
 }
 
-std::string Interpreter::stringify_value() {
+std::string Interpreter::stringify_value() const {
     return std::visit(Token::PrinterVisitor(), value_);
 }
 
