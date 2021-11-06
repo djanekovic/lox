@@ -5,19 +5,12 @@
 #include <stdexcept>
 #include <string>
 #include <variant>
+
 #include "lox.h"
 #include "parser.h"
 
 using namespace lox;
 
-std::unique_ptr<Expr> Parser::parse()
-{
-    try {
-        return expression();
-    } catch (ParseError& error) {
-        return nullptr;
-    }
-}
 
 
 /**

@@ -19,7 +19,7 @@ void run(std::string&& command)
 
     auto tokens = scanner.scan_tokens();
     lox::Parser parser(std::move(tokens));
-    auto expression = parser.parse();
+    auto statements = parser.parse();
 
     if (lox::Lox::had_error) {
         return;
@@ -32,7 +32,7 @@ void run(std::string&& command)
     fmt::print("{}\n", printer.to_string());
 #endif
 
-    interpreter.interpret(std::move(expression));
+    interpreter.interpret(std::move(statements));
 }
 
 
