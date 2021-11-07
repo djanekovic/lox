@@ -2,9 +2,6 @@
 #include <memory>
 #include <numeric>
 #include <functional>
-#include <stdexcept>
-#include <string>
-#include <variant>
 
 #include "lox.h"
 #include "parser.h"
@@ -15,10 +12,32 @@ std::vector<std::unique_ptr<Stmt>> Parser::parse()
 {
     std::vector<std::unique_ptr<Stmt>> statements;
     while(!is_end()) {
-        statements.emplace_back(statement());
+        statements.emplace_back(declaration());
     }
 
     return statements;
+}
+
+std::unique_ptr<Stmt> Parser::declaration()
+{
+    try {
+        if (match(std::array{TokenType::VAR})) {
+            return variable_declaration();
+        }
+        return statement();
+    } catch (ParseError& ex) {
+        synchronize();
+        return nullptr;
+    }
+}
+
+std::unique_ptr<Stmt> Parser::variable_declaration()
+{
+    Token name = consume(TokenType::IDENTIFIER, "Expect variable name");
+    auto expr = match(std::array{TokenType::EQUAL}) ? expression() : std::unique_ptr<Expr>();
+    consume(TokenType::SEMICOLON, "Expect ';' after variable declaration");
+
+    return std::make_unique<VarStmt>(std::move(name), std::move(expr));
 }
 
 
@@ -144,16 +163,16 @@ std::unique_ptr<Expr> Parser::unary()
 
 
 /**
- * primary -> NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")" ;
+ * primary -> "true" | "false" | "nil" | NUMBER | STRING | IDENTIFIER | "(" expression ")" ;
  */
 std::unique_ptr<Expr> Parser::primary()
 {
-    if (match(std::array{TokenType::FALSE})) {
-        return std::make_unique<LiteralExpr>(false);
-    }
-
     if (match(std::array{TokenType::TRUE})) {
         return std::make_unique<LiteralExpr>(true);
+    }
+
+    if (match(std::array{TokenType::FALSE})) {
+        return std::make_unique<LiteralExpr>(false);
     }
 
     if (match(std::array{TokenType::NIL})) {
@@ -163,8 +182,13 @@ std::unique_ptr<Expr> Parser::primary()
     if (match(std::array{TokenType::NUMBER})) {
         return std::make_unique<LiteralExpr>(std::get<double>(previous().lexeme_));
     }
+
     if (match(std::array{TokenType::STRING})) {
         return std::make_unique<LiteralExpr>(std::get<std::string>(previous().lexeme_));
+    }
+
+    if (match(std::array{TokenType::IDENTIFIER})) {
+        return std::make_unique<VariableExpr>(previous());
     }
 
     if (match(std::array{TokenType::LEFT_PAREN})) {

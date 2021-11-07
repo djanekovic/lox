@@ -1,5 +1,4 @@
 #pragma once
-#include <variant>
 #include <memory>
 #include <string>
 
@@ -21,18 +20,19 @@ struct LiteralExpr;
 struct GroupingExpr;
 struct UnaryExpr;
 struct BinaryExpr;
+struct VariableExpr;
 
 struct Visitor {
     virtual void visit_literal_node(const LiteralExpr& node) = 0;
     virtual void visit_grouping_node(const GroupingExpr& node) = 0;
     virtual void visit_unary_node(const UnaryExpr& node) = 0;
     virtual void visit_binary_node(const BinaryExpr& node) = 0;
+    virtual void visit_variable_expr(const VariableExpr& node) = 0;
 };
 
 
 struct LiteralExpr: public Expr {
-    using LiteralType = std::variant<std::monostate, double, std::string, bool>;
-    LiteralType literal_;
+    ValueType literal_;
 
     template<typename LiteralType>
     explicit LiteralExpr(LiteralType&& literal):
@@ -76,6 +76,16 @@ struct BinaryExpr: public Expr {
 
     void accept(Visitor& visitor) const override {
         visitor.visit_binary_node(*this);
+    }
+};
+
+struct VariableExpr: public Expr {
+    const Token name_;
+
+    VariableExpr(Token name): name_{std::move(name)} {}
+
+    void accept(Visitor& visitor) const override {
+        visitor.visit_variable_expr(*this);
     }
 };
 } // namespace lox

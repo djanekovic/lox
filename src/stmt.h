@@ -13,13 +13,16 @@ struct Stmt {
 
 struct ExpressionStmt;
 struct PrintStmt;
+struct VarStmt;
+
 struct StmtVisitor {
     virtual void visit_expression_stmt(const ExpressionStmt& node) = 0;
     virtual void visit_print_stmt(const PrintStmt& node) = 0;
+    virtual void visit_var_stmt(const VarStmt& node) = 0;
 };
 
 struct ExpressionStmt: public Stmt {
-    std::unique_ptr<Expr> expression_;
+    const std::unique_ptr<Expr> expression_;
 
     ExpressionStmt(std::unique_ptr<Expr> expression):
         expression_{std::move(expression)} {}
@@ -30,7 +33,7 @@ struct ExpressionStmt: public Stmt {
 };
 
 struct PrintStmt : public Stmt {
-    std::unique_ptr<Expr> expression_;
+    const std::unique_ptr<Expr> expression_;
 
     PrintStmt(std::unique_ptr<Expr> expression):
         expression_{std::move(expression)} {}
@@ -40,6 +43,17 @@ struct PrintStmt : public Stmt {
     }
 };
 
+struct VarStmt: public Stmt {
+    const Token name_;
+    const std::unique_ptr<Expr> initializer_;
+
+    VarStmt(Token name, std::unique_ptr<Expr> initializer):
+        name_{std::move(name)}, initializer_{std::move(initializer)} {}
+
+    void accept(StmtVisitor& visitor) const {
+        return visitor.visit_var_stmt(*this);
+    }
+};
 
 
 } //namespace lox

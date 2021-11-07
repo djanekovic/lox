@@ -31,6 +31,17 @@ void Interpreter::visit_print_stmt(const PrintStmt& stmt) {
 }
 
 
+void Interpreter::visit_var_stmt(const VarStmt& stmt) {
+    if (stmt.initializer_) {
+        evaluate(*stmt.initializer_);
+    } else {
+        value_ = std::monostate();
+    }
+
+    environment_.define(std::get<std::string>(stmt.name_.lexeme_), value_);
+}
+
+
 /** Handle expressions **/
 void Interpreter::evaluate(const Expr& expression) {
     expression.accept(*this);
@@ -94,13 +105,13 @@ struct PlusVisitor {
     //TODO: we should use universal references here but we need SFINAE in that case.
     //because compiler will not call our string override
     template<typename LhsType, typename RhsType>
-    Interpreter::ValueType operator()(LhsType lhs, RhsType rhs) {
+    ValueType operator()(LhsType lhs, RhsType rhs) {
         throw Lox::RuntimeError(token_, "Operands must be either two strings or two numbers!");
     }
 
-    Interpreter::ValueType operator()(const std::string& lhs, const std::string& rhs) { return lhs + rhs; }
+    ValueType operator()(const std::string& lhs, const std::string& rhs) { return lhs + rhs; }
 
-    Interpreter::ValueType operator()(double lhs, double rhs) { return lhs + rhs; }
+    ValueType operator()(double lhs, double rhs) { return lhs + rhs; }
 };
 
 void Interpreter::visit_binary_node(const BinaryExpr& expr) {
@@ -155,4 +166,9 @@ void Interpreter::visit_binary_node(const BinaryExpr& expr) {
     }
 
     __builtin_unreachable();
+}
+
+
+void Interpreter::visit_variable_expr(const VariableExpr& node) {
+    value_ = environment_.get(node.name_);
 }

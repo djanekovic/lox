@@ -9,8 +9,10 @@ struct Lox {
     struct RuntimeError: public std::runtime_error {
         const Token token_;
 
-        RuntimeError(Token token, const char *message):
-            std::runtime_error(message), token_{std::move(token)} {}
+        template<typename StringType>
+        RuntimeError(Token token, StringType&& message):
+            std::runtime_error(std::forward<StringType>(message)),
+            token_{std::move(token)} {}
     };
 
     inline static bool had_error = false;

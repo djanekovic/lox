@@ -1,8 +1,9 @@
 #pragma once
 
 #include <string>
-#include <variant>
 #include <fmt/core.h>
+
+#include "value_type.h"
 
 namespace lox {
 enum class TokenType {
@@ -38,8 +39,7 @@ struct Token {
 
     const TokenType type_;
 
-    // we are using monostate as nil!
-    const std::variant<std::monostate, bool, double, std::string> lexeme_;
+    const ValueType lexeme_;
     const int line_;
 
     std::string stringify_token() const {

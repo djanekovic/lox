@@ -24,6 +24,10 @@ class Parser {
     Token consume(TokenType type, std::string message);
     void synchronize();
 
+
+    std::unique_ptr<Stmt> declaration();
+    std::unique_ptr<Stmt> variable_declaration();
+
     std::unique_ptr<Stmt> statement();
     std::unique_ptr<Stmt> print_statement();
     std::unique_ptr<Stmt> expression_statement() ;
