@@ -11,7 +11,7 @@ class Environment {
 
   public:
     void define(const std::string& name, ValueType value) {
-        values.emplace(name, value);
+        values.insert_or_assign(name, value);
     }
 
     ValueType get(const Token& name) const {
