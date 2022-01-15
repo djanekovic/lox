@@ -17,7 +17,13 @@ set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
 include_directories(extern/fmt/include)
-add_executable(lox src/main.cpp src/scanner.cpp src/ast_pretty_printer.cpp src/parser.cpp src/interpreter.cpp)
+add_executable(lox
+    src/main.cpp
+    src/scanner.cpp
+    src/ast_pretty_printer.cpp
+    src/parser.cpp
+    src/interpreter.cpp
+    src/environment.cpp)
 target_link_libraries(lox fmt::fmt)
 
 add_subdirectory(tests)
