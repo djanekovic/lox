@@ -19,6 +19,7 @@ class Interpreter: public Visitor, public StmtVisitor {
     Environment environment_;
 
     void execute(std::unique_ptr<Stmt> statement);
+    void visit_assign_node(const AssignExpr& node) override;
     void visit_literal_node(const LiteralExpr& node) override;
     void visit_unary_node(const UnaryExpr& node) override;
     void visit_binary_node(const BinaryExpr& node) override;

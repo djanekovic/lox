@@ -16,13 +16,16 @@ struct Expr {
 
 
 // Forward declarations we will need
+struct AssignExpr;
 struct LiteralExpr;
 struct GroupingExpr;
 struct UnaryExpr;
 struct BinaryExpr;
 struct VariableExpr;
 
+//TODO: visitor should maybe return ValueType?
 struct Visitor {
+    virtual void visit_assign_node(const AssignExpr& node) = 0;
     virtual void visit_literal_node(const LiteralExpr& node) = 0;
     virtual void visit_grouping_node(const GroupingExpr& node) = 0;
     virtual void visit_unary_node(const UnaryExpr& node) = 0;
@@ -30,6 +33,18 @@ struct Visitor {
     virtual void visit_variable_expr(const VariableExpr& node) = 0;
 };
 
+
+struct AssignExpr: public Expr {
+    const Token name_;
+    const std::unique_ptr<Expr> value_;
+
+    AssignExpr(Token name_, std::unique_ptr<Expr> value):
+        name_{std::move(name_)}, value_{std::move(value)} {}
+
+    void accept(Visitor& visitor) const override {
+        visitor.visit_assign_node(*this);
+    }
+};
 
 struct LiteralExpr: public Expr {
     ValueType literal_;

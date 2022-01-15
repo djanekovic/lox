@@ -70,13 +70,29 @@ std::unique_ptr<Stmt> Parser::expression_statement() {
 
 
 /**
- * expression -> equality
+ * expression -> assignment
  */
 std::unique_ptr<Expr> Parser::expression()
 {
-    return equality();
+    return assignment();
 }
 
+
+std::unique_ptr<Expr> Parser::assignment() {
+    auto expr = equality();
+    if (match(std::array{TokenType::EQUAL})) {
+        auto equals = previous();
+        auto value = assignment();
+
+        if (auto *upcast_expr = dynamic_cast<VariableExpr *>(expr.get())) {
+            return std::make_unique<AssignExpr>(std::move(upcast_expr->name_), std::move(value));
+        }
+
+        Lox::error(equals, "Invalid assignment target.");
+    }
+
+    return expr;
+}
 
 
 /**

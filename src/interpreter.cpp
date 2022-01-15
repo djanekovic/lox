@@ -35,10 +35,16 @@ void Interpreter::visit_var_stmt(const VarStmt& stmt) {
     if (stmt.initializer_) {
         evaluate(*stmt.initializer_);
     } else {
+        // if there is no initializer, init to null
         value_ = std::monostate();
     }
 
     environment_.define(std::get<std::string>(stmt.name_.lexeme_), value_);
+}
+
+void Interpreter::visit_assign_node(const AssignExpr& expr) {
+    evaluate(*expr.value_);
+    environment_.assign(expr.name_, value_);
 }
 
 

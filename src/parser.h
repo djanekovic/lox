@@ -33,6 +33,7 @@ class Parser {
     std::unique_ptr<Stmt> expression_statement() ;
 
     std::unique_ptr<Expr> expression();
+    std::unique_ptr<Expr> assignment();
     std::unique_ptr<Expr> equality();
     std::unique_ptr<Expr> comparison();
     std::unique_ptr<Expr> term();
