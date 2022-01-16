@@ -37,6 +37,7 @@ class Interpreter: public Visitor, public StmtVisitor {
     void execute(const Stmt& statement);
     void visit_assign_node(const AssignExpr& node) override;
     void visit_literal_node(const LiteralExpr& node) override;
+    void visit_logical_node(const LogicalExpr& node) override;
     void visit_unary_node(const UnaryExpr& node) override;
     void visit_binary_node(const BinaryExpr& node) override;
     void visit_grouping_node(const GroupingExpr& node) override;
@@ -46,6 +47,7 @@ class Interpreter: public Visitor, public StmtVisitor {
     void execute_block(const std::vector<std::unique_ptr<Stmt>>& statements, Environment&& env);
     void visit_block_stmt(const BlockStmt& stmt) override;
     void visit_expression_stmt(const ExpressionStmt& stmt) override;
+    void visit_if_expression_stmt(const IfExpressionStmt& stmt) override;
     void visit_print_stmt(const PrintStmt& stmt) override;
     void visit_var_stmt(const VarStmt& stmt) override;
 

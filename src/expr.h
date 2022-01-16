@@ -18,6 +18,7 @@ struct Expr {
 // Forward declarations we will need
 struct AssignExpr;
 struct LiteralExpr;
+struct LogicalExpr;
 struct GroupingExpr;
 struct UnaryExpr;
 struct BinaryExpr;
@@ -27,6 +28,7 @@ struct VariableExpr;
 struct Visitor {
     virtual void visit_assign_node(const AssignExpr& node) = 0;
     virtual void visit_literal_node(const LiteralExpr& node) = 0;
+    virtual void visit_logical_node(const LogicalExpr& node) = 0;
     virtual void visit_grouping_node(const GroupingExpr& node) = 0;
     virtual void visit_unary_node(const UnaryExpr& node) = 0;
     virtual void visit_binary_node(const BinaryExpr& node) = 0;
@@ -55,6 +57,19 @@ struct LiteralExpr: public Expr {
 
     void accept(Visitor& visitor) const override {
         visitor.visit_literal_node(*this);
+    }
+};
+
+struct LogicalExpr: public Expr {
+    const Token op_;
+    const std::unique_ptr<Expr> lhs_;
+    const std::unique_ptr<Expr> rhs_;
+
+    LogicalExpr(Token op, std::unique_ptr<Expr> lhs, std::unique_ptr<Expr> rhs):
+        op_{std::move(op)}, lhs_{std::move(lhs)}, rhs_{std::move(rhs)} {}
+
+    void accept(Visitor& visitor) const override {
+        visitor.visit_logical_node(*this);
     }
 };
 

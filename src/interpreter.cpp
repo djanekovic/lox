@@ -5,6 +5,44 @@
 
 using namespace lox;
 
+struct TruthVisitor {
+    template<typename T>
+    bool operator()(T&& value) { return true; }
+    bool operator()(std::monostate value) { return false; }
+    bool operator()(bool value) { return value; }
+};
+
+struct EqualsVisitor {
+    // if the types are different just return false
+    template<typename LhsType, typename RhsType>
+    bool operator()(LhsType&& lhs, RhsType&& rhs) { return false; }
+
+    bool operator()(std::monostate lhs, std::monostate rhs) { return true; }
+
+    bool operator()(double lhs, double rhs) { return lhs == rhs; }
+
+    bool operator()(bool lhs, bool rhs) { return lhs == rhs; }
+
+    bool operator()(const std::string& lhs, const std::string& rhs) { return lhs == rhs; }
+};
+
+struct PlusVisitor {
+    Token token_;
+    PlusVisitor(const Token& token): token_{token} {}
+
+    //TODO: we should use universal references here but we need SFINAE in that case.
+    //because compiler will not call our string override
+    template<typename LhsType, typename RhsType>
+    ValueType operator()(LhsType lhs, RhsType rhs) {
+        throw Lox::RuntimeError(token_, "Operands must be either two strings or two numbers!");
+    }
+
+    ValueType operator()(const std::string& lhs, const std::string& rhs) { return lhs + rhs; }
+
+    ValueType operator()(double lhs, double rhs) { return lhs + rhs; }
+};
+
+
 void Interpreter::interpret(std::vector<std::unique_ptr<Stmt>> statements) {
     try {
         for(const auto& statement: statements) {
@@ -45,6 +83,15 @@ void Interpreter::visit_print_stmt(const PrintStmt& stmt) {
     fmt::print("{}\n", std::visit(Token::PrinterVisitor(), value_));
 }
 
+void Interpreter::visit_if_expression_stmt(const IfExpressionStmt& stmt) {
+    evaluate(*stmt.condition_);
+    if (std::visit(TruthVisitor(), value_)) {
+        execute(*stmt.then_stmt_);
+    } else if (stmt.else_stmt_) {
+        execute(*stmt.else_stmt_);
+    }
+}
+
 
 void Interpreter::visit_var_stmt(const VarStmt& stmt) {
     if (stmt.initializer_) {
@@ -72,6 +119,24 @@ void Interpreter::visit_literal_node(const LiteralExpr& expr) {
     value_ = expr.literal_;
 }
 
+void Interpreter::visit_logical_node(const LogicalExpr& expr) {
+    evaluate(*expr.lhs_);
+
+    if (expr.op_.type_ == TokenType::OR) {
+        if (std::visit(TruthVisitor(), value_)) {
+            // we have a or operation and first one is false, we can short circuit
+            return;
+        }
+    } else {
+        if (!std::visit(TruthVisitor(), value_)) {
+            // we have an and operation and first one is false, we can short circuit
+            return;
+        }
+    }
+
+    evaluate(*expr.rhs_);
+}
+
 void Interpreter::visit_grouping_node(const GroupingExpr& expr) {
     // traverse down! -> value will be set when we reach literal node
     expr.expr_->accept(*this);
@@ -80,12 +145,6 @@ void Interpreter::visit_grouping_node(const GroupingExpr& expr) {
 std::string Interpreter::stringify_value() const {
     return std::visit(Token::PrinterVisitor(), value_);
 }
-
-struct TruthVisitor {
-    template<typename T>
-    bool operator()(T&& value) { return false; }
-    bool operator()(bool value) { return value; }
-};
 
 void Interpreter::visit_unary_node(const UnaryExpr& expr) {
     expr.expr_->accept(*this);
@@ -104,36 +163,6 @@ void Interpreter::visit_unary_node(const UnaryExpr& expr) {
 
     __builtin_unreachable();
 }
-
-struct EqualsVisitor {
-    // if the types are different just return false
-    template<typename LhsType, typename RhsType>
-    bool operator()(LhsType&& lhs, RhsType&& rhs) { return false; }
-
-    bool operator()(std::monostate lhs, std::monostate rhs) { return true; }
-
-    bool operator()(double lhs, double rhs) { return lhs == rhs; }
-
-    bool operator()(bool lhs, bool rhs) { return lhs == rhs; }
-
-    bool operator()(const std::string& lhs, const std::string& rhs) { return lhs == rhs; }
-};
-
-struct PlusVisitor {
-    Token token_;
-    PlusVisitor(const Token& token): token_{token} {}
-
-    //TODO: we should use universal references here but we need SFINAE in that case.
-    //because compiler will not call our string override
-    template<typename LhsType, typename RhsType>
-    ValueType operator()(LhsType lhs, RhsType rhs) {
-        throw Lox::RuntimeError(token_, "Operands must be either two strings or two numbers!");
-    }
-
-    ValueType operator()(const std::string& lhs, const std::string& rhs) { return lhs + rhs; }
-
-    ValueType operator()(double lhs, double rhs) { return lhs + rhs; }
-};
 
 void Interpreter::visit_binary_node(const BinaryExpr& expr) {
     expr.lhs_->accept(*this);

@@ -30,11 +30,14 @@ class Parser {
 
     std::unique_ptr<Stmt> statement();
     std::unique_ptr<Stmt> print_statement();
+    std::unique_ptr<Stmt> if_statement();
     std::unique_ptr<Stmt> expression_statement();
     std::vector<std::unique_ptr<Stmt>> block();
 
     std::unique_ptr<Expr> expression();
     std::unique_ptr<Expr> assignment();
+    std::unique_ptr<Expr> logical_or();
+    std::unique_ptr<Expr> logical_and();
     std::unique_ptr<Expr> equality();
     std::unique_ptr<Expr> comparison();
     std::unique_ptr<Expr> term();
@@ -42,8 +45,7 @@ class Parser {
     std::unique_ptr<Expr> unary();
     std::unique_ptr<Expr> primary();
 
-    template<size_t N> bool match(std::array<TokenType, N> tokens);
-
+    bool match(std::initializer_list<TokenType> tokens);
 
 public:
     explicit Parser(std::vector<Token>&& tokens):
