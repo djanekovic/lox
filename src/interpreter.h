@@ -11,14 +11,30 @@
 
 namespace lox {
 class Interpreter: public Visitor, public StmtVisitor {
+  private:
+    class EnterEnvironmentGuard {
+        Interpreter& interpreter_;
+        Environment previous_;
+
+    public:
+        EnterEnvironmentGuard(Interpreter& interpreter, Environment&& env):
+            interpreter_{interpreter}, // take reference of the current interpreter
+            // old interpreter.environment_ goes to previous and env goes in his place
+            previous_{std::exchange(interpreter_.environment_, std::move(env))} {}
+
+        ~EnterEnvironmentGuard() {
+            // reset previous environment
+            interpreter_.environment_ = std::move(previous_);
+        }
+    };
   public:
     void interpret(std::vector<std::unique_ptr<Stmt>> statements);
 
   private:
     ValueType value_;
-    Environment environment_;
+    Environment environment_;   // global Environment
 
-    void execute(std::unique_ptr<Stmt> statement);
+    void execute(const Stmt& statement);
     void visit_assign_node(const AssignExpr& node) override;
     void visit_literal_node(const LiteralExpr& node) override;
     void visit_unary_node(const UnaryExpr& node) override;
@@ -27,6 +43,8 @@ class Interpreter: public Visitor, public StmtVisitor {
     void visit_variable_expr(const VariableExpr& node) override;
 
     void evaluate(const Expr& expression);
+    void execute_block(const std::vector<std::unique_ptr<Stmt>>& statements, Environment&& env);
+    void visit_block_stmt(const BlockStmt& stmt) override;
     void visit_expression_stmt(const ExpressionStmt& stmt) override;
     void visit_print_stmt(const PrintStmt& stmt) override;
     void visit_var_stmt(const VarStmt& stmt) override;

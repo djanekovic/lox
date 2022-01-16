@@ -46,9 +46,23 @@ std::unique_ptr<Stmt> Parser::statement() {
         return print_statement();
     }
 
+    if (match(std::array{TokenType::LEFT_BRACE})) {
+        return std::make_unique<BlockStmt>(block());
+    }
+
     return expression_statement();
 }
 
+std::vector<std::unique_ptr<Stmt>> Parser::block() {
+    std::vector<std::unique_ptr<Stmt>> statements;
+
+    while(!check(TokenType::RIGHT_BRACE) and !is_end()) {
+        statements.push_back(declaration());
+    }
+
+    consume(TokenType::RIGHT_BRACE, "Expect '}' after block");
+    return statements;
+}
 
 /**
  * print_statement -> "print" expression ";"

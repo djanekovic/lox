@@ -46,8 +46,8 @@ struct Token {
         switch(type_) {
             case TokenType::LEFT_PAREN:     return "(";
             case TokenType::RIGHT_PAREN:    return ")";
-            case TokenType::LEFT_BRACE:     return "[";
-            case TokenType::RIGHT_BRACE:    return "]";
+            case TokenType::LEFT_BRACE:     return "{";
+            case TokenType::RIGHT_BRACE:    return "}";
             case TokenType::COMMA:          return ",";
             case TokenType::DOT:            return ".";
             case TokenType::MINUS:          return "-";

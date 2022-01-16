@@ -7,8 +7,8 @@ using namespace lox;
 
 void Interpreter::interpret(std::vector<std::unique_ptr<Stmt>> statements) {
     try {
-        for(auto& statement: statements) {
-            execute(std::move(statement));
+        for(const auto& statement: statements) {
+            execute(*statement);
         }
     } catch (Lox::RuntimeError& ex) {
         Lox::runtime_error(ex);
@@ -17,8 +17,23 @@ void Interpreter::interpret(std::vector<std::unique_ptr<Stmt>> statements) {
 
 
 /** Handle statements **/
-void Interpreter::execute(std::unique_ptr<Stmt> statement) {
-    statement->accept(*this);
+void Interpreter::execute(const Stmt& statement) {
+    statement.accept(*this);
+}
+
+// execute this block in new environment
+void Interpreter::execute_block(const std::vector<std::unique_ptr<Stmt>>& statements, Environment&& env) {
+    // this is a cool RAII trick I got from here: https://github.com/eliasdaler/lox/blob/master/src/Interpreter.cpp#L376
+    EnterEnvironmentGuard ee{*this, std::move(env)};
+    for (const auto& stmt: statements) {
+        execute(*stmt);
+    }
+}
+
+void Interpreter::visit_block_stmt(const BlockStmt& stmt) {
+    // create new environment where environment_ is parent environment(enclosure)
+    Environment new_env(&environment_);
+    execute_block(stmt.statements_, std::move(new_env));
 }
 
 void Interpreter::visit_expression_stmt(const ExpressionStmt& stmt) {

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <vector>
 #include "expr.h"
 
 namespace lox {
@@ -11,14 +12,27 @@ struct Stmt {
     virtual void accept(StmtVisitor& visitor) const = 0;
 };
 
+struct BlockStmt;
 struct ExpressionStmt;
 struct PrintStmt;
 struct VarStmt;
 
 struct StmtVisitor {
+    virtual void visit_block_stmt(const BlockStmt& node) = 0;
     virtual void visit_expression_stmt(const ExpressionStmt& node) = 0;
     virtual void visit_print_stmt(const PrintStmt& node) = 0;
     virtual void visit_var_stmt(const VarStmt& node) = 0;
+};
+
+struct BlockStmt: public Stmt {
+    const std::vector<std::unique_ptr<Stmt>> statements_;
+
+    explicit BlockStmt(std::vector<std::unique_ptr<Stmt>>&& statements):
+        statements_{std::move(statements)} {}
+
+    void accept(StmtVisitor& visitor) const {
+        return visitor.visit_block_stmt(*this);
+    }
 };
 
 struct ExpressionStmt: public Stmt {
