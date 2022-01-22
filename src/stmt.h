@@ -17,6 +17,7 @@ struct ExpressionStmt;
 struct IfExpressionStmt;
 struct PrintStmt;
 struct VarStmt;
+struct WhileStmt;
 
 struct StmtVisitor {
     virtual void visit_block_stmt(const BlockStmt& node) = 0;
@@ -24,6 +25,7 @@ struct StmtVisitor {
     virtual void visit_if_expression_stmt(const IfExpressionStmt& node) = 0;
     virtual void visit_print_stmt(const PrintStmt& node) = 0;
     virtual void visit_var_stmt(const VarStmt& node) = 0;
+    virtual void visit_while_stmt(const WhileStmt& node) = 0;
 };
 
 struct BlockStmt: public Stmt {
@@ -84,6 +86,18 @@ struct VarStmt: public Stmt {
 
     void accept(StmtVisitor& visitor) const override {
         return visitor.visit_var_stmt(*this);
+    }
+};
+
+struct WhileStmt: public Stmt {
+    const std::unique_ptr<Expr> condition_;
+    const std::unique_ptr<Stmt> body_;
+
+    WhileStmt(std::unique_ptr<Expr> condition, std::unique_ptr<Stmt> body):
+        condition_{std::move(condition)}, body_{std::move(body)} {}
+
+    void accept(StmtVisitor& visitor) const override {
+        return visitor.visit_while_stmt(*this);
     }
 };
 } //namespace lox

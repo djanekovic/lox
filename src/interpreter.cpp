@@ -60,7 +60,7 @@ void Interpreter::execute(const Stmt& statement) {
 }
 
 // execute this block in new environment
-void Interpreter::execute_block(const std::vector<std::unique_ptr<Stmt>>& statements, Environment&& env) {
+void Interpreter::execute_block(const std::vector<std::unique_ptr<Stmt>>& statements, std::unique_ptr<Environment>&& env) {
     // this is a cool RAII trick I got from here: https://github.com/eliasdaler/lox/blob/master/src/Interpreter.cpp#L376
     EnterEnvironmentGuard ee{*this, std::move(env)};
     for (const auto& stmt: statements) {
@@ -70,8 +70,7 @@ void Interpreter::execute_block(const std::vector<std::unique_ptr<Stmt>>& statem
 
 void Interpreter::visit_block_stmt(const BlockStmt& stmt) {
     // create new environment where environment_ is parent environment(enclosure)
-    Environment new_env(&environment_);
-    execute_block(stmt.statements_, std::move(new_env));
+    execute_block(stmt.statements_, std::make_unique<Environment>(environment_.get()));
 }
 
 void Interpreter::visit_expression_stmt(const ExpressionStmt& stmt) {
@@ -101,12 +100,23 @@ void Interpreter::visit_var_stmt(const VarStmt& stmt) {
         value_ = std::monostate();
     }
 
-    environment_.define(std::get<std::string>(stmt.name_.lexeme_), value_);
+    environment_->define(std::get<std::string>(stmt.name_.lexeme_), value_);
+}
+
+void Interpreter::visit_while_stmt(const WhileStmt& stmt) {
+    for(;;) {
+        evaluate(*stmt.condition_);
+        if (!std::visit(TruthVisitor(), value_)) {
+            return;
+        }
+
+        execute(*stmt.body_);
+    }
 }
 
 void Interpreter::visit_assign_node(const AssignExpr& expr) {
     evaluate(*expr.value_);
-    environment_.assign(expr.name_, value_);
+    environment_->assign(expr.name_, value_);
 }
 
 
@@ -220,5 +230,5 @@ void Interpreter::visit_binary_node(const BinaryExpr& expr) {
 
 
 void Interpreter::visit_variable_expr(const VariableExpr& node) {
-    value_ = environment_.get(node.name_);
+    value_ = environment_->get(node.name_);
 }

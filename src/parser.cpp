@@ -50,11 +50,90 @@ std::unique_ptr<Stmt> Parser::statement() {
         return print_statement();
     }
 
+    if (match({TokenType::FOR})) {
+        return for_statement();
+    }
+
+    if (match({TokenType::WHILE})) {
+        return while_statement();
+    }
+
     if (match({TokenType::LEFT_BRACE})) {
         return std::make_unique<BlockStmt>(block());
     }
 
     return expression_statement();
+}
+
+std::unique_ptr<Stmt> Parser::for_statement() {
+    consume(TokenType::LEFT_PAREN, "Expect '(' after for");
+
+    // parse initializer
+    std::unique_ptr<Stmt> initializer;
+    if (match({TokenType::VAR})) {
+        initializer = variable_declaration();   // first toker is var, we have variable declaration in for loop
+    } else if (!match({TokenType::SEMICOLON})) {
+        initializer = expression_statement();   // second token is not ;, we have expr_statement
+    }
+
+    // parse condition part if available
+    std::unique_ptr<Expr> condition;
+    if (!check(TokenType::SEMICOLON)) {
+        condition = expression();
+    }
+    consume(TokenType::SEMICOLON, "Expect ';' after loop condition");
+
+    // parse increment part if available
+    std::unique_ptr<Expr> increment;
+    if (!check(TokenType::RIGHT_PAREN)) {
+        increment = expression();
+    }
+    consume(TokenType::RIGHT_PAREN, "Expect ';' after for clauses");
+
+    std::unique_ptr<Stmt> body{statement()};
+
+    // For loop is
+    // {
+    //   initializer
+    //   while(condition) {
+    //      body
+    //      increment
+    //   }
+    // }
+    if (increment) {
+        // we have an increment, wrap it in a block and add increment to the end
+        std::vector<std::unique_ptr<Stmt>> body_statements;
+        body_statements.reserve(2);
+        body_statements.push_back(std::move(body));
+        body_statements.push_back(std::make_unique<ExpressionStmt>(std::move(increment)));
+        body = std::make_unique<BlockStmt>(std::move(body_statements));
+    }
+
+    if (!condition) {
+        // if we don't have a condition we have a while(true)
+        condition = std::make_unique<LiteralExpr>(true);
+    }
+    body = std::make_unique<WhileStmt>(std::move(condition), std::move(body));
+
+    // if we have a initializer make a new block and wrap it
+    if (initializer) {
+        std::vector<std::unique_ptr<Stmt>> body_statements;
+        body_statements.reserve(2);
+        body_statements.push_back(std::move(initializer));
+        body_statements.push_back(std::move(body));
+        body = std::make_unique<BlockStmt>(std::move(body_statements));
+    }
+
+    return body;
+}
+
+std::unique_ptr<Stmt> Parser::while_statement() {
+    consume(TokenType::LEFT_PAREN, "Expect '(' after while");
+    auto condition = expression();
+    consume(TokenType::RIGHT_PAREN, "Expect ')' after while condition");
+    auto body = statement();
+
+    return std::make_unique<WhileStmt>(std::move(condition), std::move(body));
 }
 
 std::vector<std::unique_ptr<Stmt>> Parser::block() {
