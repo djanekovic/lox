@@ -37,8 +37,8 @@ struct Visitor {
 
 
 struct AssignExpr: public Expr {
-    const Token name_;
-    const std::unique_ptr<Expr> value_;
+    Token name_;
+    std::unique_ptr<Expr> value_;
 
     AssignExpr(Token name_, std::unique_ptr<Expr> value):
         name_{std::move(name_)}, value_{std::move(value)} {}
@@ -61,9 +61,9 @@ struct LiteralExpr: public Expr {
 };
 
 struct LogicalExpr: public Expr {
-    const Token op_;
-    const std::unique_ptr<Expr> lhs_;
-    const std::unique_ptr<Expr> rhs_;
+    Token op_;
+    std::unique_ptr<Expr> lhs_;
+    std::unique_ptr<Expr> rhs_;
 
     LogicalExpr(Token op, std::unique_ptr<Expr> lhs, std::unique_ptr<Expr> rhs):
         op_{std::move(op)}, lhs_{std::move(lhs)}, rhs_{std::move(rhs)} {}
@@ -74,7 +74,7 @@ struct LogicalExpr: public Expr {
 };
 
 struct GroupingExpr: public Expr {
-    const std::unique_ptr<Expr> expr_;
+    std::unique_ptr<Expr> expr_;
 
     explicit GroupingExpr(std::unique_ptr<Expr> expr):
         expr_{std::move(expr)} {}
@@ -85,8 +85,8 @@ struct GroupingExpr: public Expr {
 };
 
 struct UnaryExpr: public Expr {
-    const Token op_;
-    const std::unique_ptr<Expr> expr_;
+    Token op_;
+    std::unique_ptr<Expr> expr_;
 
     UnaryExpr(const Token op, std::unique_ptr<Expr> expr):
         op_{std::move(op)}, expr_{std::move(expr)} {}
@@ -97,9 +97,9 @@ struct UnaryExpr: public Expr {
 };
 
 struct BinaryExpr: public Expr {
-    const Token op_;
-    const std::unique_ptr<Expr> lhs_;
-    const std::unique_ptr<Expr> rhs_;
+    Token op_;
+    std::unique_ptr<Expr> lhs_;
+    std::unique_ptr<Expr> rhs_;
 
     BinaryExpr(Token op, std::unique_ptr<Expr> lhs, std::unique_ptr<Expr> rhs):
         op_{std::move(op)}, lhs_{std::move(lhs)}, rhs_{std::move(rhs)} {}
@@ -110,7 +110,7 @@ struct BinaryExpr: public Expr {
 };
 
 struct VariableExpr: public Expr {
-    const Token name_;
+    Token name_;
 
     VariableExpr(Token name): name_{std::move(name)} {}
 
@@ -118,4 +118,5 @@ struct VariableExpr: public Expr {
         visitor.visit_variable_expr(*this);
     }
 };
+
 } // namespace lox

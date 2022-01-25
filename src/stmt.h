@@ -29,7 +29,7 @@ struct StmtVisitor {
 };
 
 struct BlockStmt: public Stmt {
-    const std::vector<std::unique_ptr<Stmt>> statements_;
+    std::vector<std::unique_ptr<Stmt>> statements_;
 
     explicit BlockStmt(std::vector<std::unique_ptr<Stmt>>&& statements):
         statements_{std::move(statements)} {}
@@ -40,7 +40,7 @@ struct BlockStmt: public Stmt {
 };
 
 struct ExpressionStmt: public Stmt {
-    const std::unique_ptr<Expr> expression_;
+    std::unique_ptr<Expr> expression_;
 
     ExpressionStmt(std::unique_ptr<Expr> expression):
         expression_{std::move(expression)} {}
@@ -51,9 +51,9 @@ struct ExpressionStmt: public Stmt {
 };
 
 struct IfExpressionStmt: public Stmt {
-    const std::unique_ptr<Expr> condition_;
-    const std::unique_ptr<Stmt> then_stmt_;
-    const std::unique_ptr<Stmt> else_stmt_;
+    std::unique_ptr<Expr> condition_;
+    std::unique_ptr<Stmt> then_stmt_;
+    std::unique_ptr<Stmt> else_stmt_;
 
     IfExpressionStmt(std::unique_ptr<Expr> condition, std::unique_ptr<Stmt> then_stmt):
         IfExpressionStmt(std::move(condition), std::move(then_stmt), nullptr) {}
@@ -67,7 +67,7 @@ struct IfExpressionStmt: public Stmt {
 };
 
 struct PrintStmt : public Stmt {
-    const std::unique_ptr<Expr> expression_;
+    std::unique_ptr<Expr> expression_;
 
     PrintStmt(std::unique_ptr<Expr> expression):
         expression_{std::move(expression)} {}
@@ -78,8 +78,8 @@ struct PrintStmt : public Stmt {
 };
 
 struct VarStmt: public Stmt {
-    const Token name_;
-    const std::unique_ptr<Expr> initializer_;
+    Token name_;
+    std::unique_ptr<Expr> initializer_;
 
     VarStmt(Token name, std::unique_ptr<Expr> initializer):
         name_{std::move(name)}, initializer_{std::move(initializer)} {}
@@ -90,8 +90,8 @@ struct VarStmt: public Stmt {
 };
 
 struct WhileStmt: public Stmt {
-    const std::unique_ptr<Expr> condition_;
-    const std::unique_ptr<Stmt> body_;
+    std::unique_ptr<Expr> condition_;
+    std::unique_ptr<Stmt> body_;
 
     WhileStmt(std::unique_ptr<Expr> condition, std::unique_ptr<Stmt> body):
         condition_{std::move(condition)}, body_{std::move(body)} {}
