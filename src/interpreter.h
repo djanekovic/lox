@@ -6,14 +6,15 @@
 #include <stdexcept>
 
 #include "lox.h"
-#include "stmt.h"
-#include "clock_callable.h"
+#include "expr/expr.h"
+#include "stmt/stmt.h"
+
+#include "native/clock_callable.h"
+
 #include "environment.h"
 
-
 namespace lox {
-class Interpreter: public Visitor, public StmtVisitor {
-  private:
+class Interpreter: public ExprVisitor, public StmtVisitor {
     class EnterEnvironmentGuard {
         Interpreter& interpreter_;
         std::unique_ptr<Environment> previous_;
@@ -33,23 +34,11 @@ class Interpreter: public Visitor, public StmtVisitor {
             interpreter_.environment_ = std::move(previous_);
         }
     };
-  public:
-    Interpreter():
-        globals_{std::make_unique<Environment>()},
-        environment_{std::make_unique<Environment>(*globals_)} {
-        globals_->define("clock", std::make_shared<ClockCallable>());
-    }
 
-    void interpret(std::vector<std::unique_ptr<Stmt>> statements);
 
-    void execute_block(const std::vector<std::unique_ptr<Stmt>>& statements, std::unique_ptr<Environment>&& env);
-    Environment *get_globals_ptr() const { return globals_.get(); }
-
-  private:
     ValueType value_;
     std::unique_ptr<Environment> globals_;       // global Environment
     std::unique_ptr<Environment> environment_;   // current Environment
-
 
     void execute(const Stmt& statement);
     void visit_assign_node(const AssignExpr& node) override;
@@ -73,20 +62,32 @@ class Interpreter: public Visitor, public StmtVisitor {
     std::string stringify_value() const;
 
     template<typename OperatorType>
-    static void check_number_operand(OperatorType&& op, ValueType v)
-    {
-        if (std::holds_alternative<double>(v)) { return; }
+    static void check_number_operand(OperatorType&& op, ValueType v) {
+        if (std::holds_alternative<double>(v)) {
+            return;
+        }
         throw Lox::RuntimeError(op, "Operand must be a number!");
     }
 
 
     template<typename OperatorType>
-    static void check_number_operand(OperatorType&& op,
-                                     ValueType lhs,
-                                     ValueType rhs)
-    {
-        if (std::holds_alternative<double>(lhs) and std::holds_alternative<double>(rhs)) { return; }
+    static void check_number_operand(OperatorType&& op, ValueType lhs, ValueType rhs) {
+        if (std::holds_alternative<double>(lhs) and std::holds_alternative<double>(rhs)) {
+            return;
+        }
         throw Lox::RuntimeError(op, "Operands must be a number!");
     }
+
+  public:
+    Interpreter():
+        globals_{std::make_unique<Environment>()},
+        environment_{std::make_unique<Environment>(*globals_)} {
+        globals_->define("clock", std::make_shared<ClockCallable>());
+    }
+
+    void interpret(std::vector<std::unique_ptr<Stmt>> statements);
+
+    void execute_block(const std::vector<std::unique_ptr<Stmt>>& statements, std::unique_ptr<Environment>&& env);
+    Environment *get_globals_ptr() const { return globals_.get(); }
 };
 } // namespace lox

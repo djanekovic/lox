@@ -1,4 +1,10 @@
 #include <fmt/core.h>
+
+#include "expr/unary_expr.h"
+#include "expr/binary_expr.h"
+#include "expr/literal_expr.h"
+#include "expr/grouping_expr.h"
+
 #include "ast_pretty_printer.h"
 
 using namespace lox;

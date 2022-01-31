@@ -1,6 +1,7 @@
 #include <cctype>
 #include <variant>
 #include <vector>
+
 #include "scanner.h"
 #include "lox.h"
 

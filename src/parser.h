@@ -1,14 +1,15 @@
 #pragma once
 
+#include <memory>
 #include <vector>
-#include <array>
 #include <string_view>
+
 #include "token.h"
-#include "stmt.h"
+#include "stmt/stmt.h"
+#include "expr/expr.h"
 
 namespace lox {
 class Parser {
-
     struct ParseError: public std::runtime_error {
         ParseError(): std::runtime_error("") {}
     };

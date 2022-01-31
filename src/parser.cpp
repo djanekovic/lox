@@ -4,6 +4,24 @@
 #include <functional>
 
 #include "lox.h"
+
+#include "expr/assign_expr.h"
+#include "expr/literal_expr.h"
+#include "expr/logical_expr.h"
+#include "expr/variable_expr.h"
+#include "expr/grouping_expr.h"
+#include "expr/call_expr.h"
+#include "expr/unary_expr.h"
+#include "expr/binary_expr.h"
+
+#include "stmt/function_stmt.h"
+#include "stmt/var_stmt.h"
+#include "stmt/block_stmt.h"
+#include "stmt/if_expression_stmt.h"
+#include "stmt/expression_stmt.h"
+#include "stmt/while_stmt.h"
+#include "stmt/print_stmt.h"
+
 #include "parser.h"
 
 using namespace lox;

@@ -1,10 +1,10 @@
 #pragma once
 
 #include <string>
-#include "expr.h"
+#include "expr/expr.h"
 
 namespace lox {
-class ASTPrettyPrinter: public Visitor {
+class ASTPrettyPrinter: public ExprVisitor {
     std::string format;
 
 public:

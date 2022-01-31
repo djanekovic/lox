@@ -1,6 +1,6 @@
 #pragma once
 
-#include "value_type.h"
+#include "../value_type.h"
 
 namespace lox {
 struct ClockCallable final: public Callable {

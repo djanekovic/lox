@@ -24,7 +24,7 @@ add_executable(lox
     src/parser.cpp
     src/interpreter.cpp
     src/environment.cpp
-    src/clock_callable.cpp)
+    src/native/clock_callable.cpp)
 target_link_libraries(lox fmt::fmt)
 
 add_subdirectory(tests)
