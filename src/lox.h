@@ -7,7 +7,7 @@
 namespace lox {
 struct Lox {
     struct RuntimeError: public std::runtime_error {
-        const Token token_;
+        Token token_;
 
         template<typename StringType>
         RuntimeError(Token token, StringType&& message):

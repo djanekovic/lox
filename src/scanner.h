@@ -14,25 +14,7 @@ private:
 
     std::vector<Token> tokens_;
     std::string program_;
-    const std::unordered_map<std::string, TokenType> keywords_
-    {
-        {"and", TokenType::AND},
-        {"class", TokenType::CLASS},
-        {"else", TokenType::ELSE},
-        {"false", TokenType::FALSE},
-        {"for", TokenType::FOR},
-        {"fun", TokenType::FUN},
-        {"if", TokenType::IF},
-        {"nil", TokenType::NIL},
-        {"or", TokenType::OR},
-        {"print", TokenType::PRINT},
-        {"return", TokenType::RETURN},
-        {"super", TokenType::SUPER},
-        {"this", TokenType::THIS},
-        {"true", TokenType::TRUE},
-        {"var", TokenType::VAR},
-        {"while", TokenType::WHILE}
-    };
+    std::unordered_map<std::string, TokenType> keywords_;
 
     bool is_end() const;
     bool match(const char c);
@@ -54,7 +36,26 @@ private:
     void identifier();
 
 public:
-    explicit Scanner(std::string&& program): program_{std::move(program)} {}
+    explicit Scanner(std::string&& program):
+        program_{std::move(program)},
+        keywords_{
+            {"and", TokenType::AND},
+            {"class", TokenType::CLASS},
+            {"else", TokenType::ELSE},
+            {"false", TokenType::FALSE},
+            {"for", TokenType::FOR},
+            {"fun", TokenType::FUN},
+            {"if", TokenType::IF},
+            {"nil", TokenType::NIL},
+            {"or", TokenType::OR},
+            {"print", TokenType::PRINT},
+            {"return", TokenType::RETURN},
+            {"super", TokenType::SUPER},
+            {"this", TokenType::THIS},
+            {"true", TokenType::TRUE},
+            {"var", TokenType::VAR},
+            {"while", TokenType::WHILE}} {}
+
     std::vector<Token> scan_tokens();
 };
 } // namespace lox

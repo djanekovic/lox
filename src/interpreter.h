@@ -7,7 +7,9 @@
 
 #include "lox.h"
 #include "stmt.h"
+#include "clock_callable.h"
 #include "environment.h"
+
 
 namespace lox {
 class Interpreter: public Visitor, public StmtVisitor {
@@ -33,13 +35,21 @@ class Interpreter: public Visitor, public StmtVisitor {
     };
   public:
     Interpreter():
-        environment_{std::make_unique<Environment>()} {}
+        globals_{std::make_unique<Environment>()},
+        environment_{std::make_unique<Environment>(*globals_)} {
+        globals_->define("clock", std::make_shared<ClockCallable>());
+    }
 
     void interpret(std::vector<std::unique_ptr<Stmt>> statements);
 
+    void execute_block(const std::vector<std::unique_ptr<Stmt>>& statements, std::unique_ptr<Environment>&& env);
+    Environment *get_globals_ptr() const { return globals_.get(); }
+
   private:
     ValueType value_;
-    std::unique_ptr<Environment> environment_;   // global Environment
+    std::unique_ptr<Environment> globals_;       // global Environment
+    std::unique_ptr<Environment> environment_;   // current Environment
+
 
     void execute(const Stmt& statement);
     void visit_assign_node(const AssignExpr& node) override;
@@ -49,10 +59,11 @@ class Interpreter: public Visitor, public StmtVisitor {
     void visit_binary_node(const BinaryExpr& node) override;
     void visit_grouping_node(const GroupingExpr& node) override;
     void visit_variable_expr(const VariableExpr& node) override;
+    void visit_call_expr(const CallExpr& node) override;
 
     void evaluate(const Expr& expression);
-    void execute_block(const std::vector<std::unique_ptr<Stmt>>& statements, std::unique_ptr<Environment>&& env);
     void visit_block_stmt(const BlockStmt& stmt) override;
+    void visit_function_expression_stmt(const FunctionStmt& stmt) override;
     void visit_expression_stmt(const ExpressionStmt& stmt) override;
     void visit_if_expression_stmt(const IfExpressionStmt& stmt) override;
     void visit_print_stmt(const PrintStmt& stmt) override;

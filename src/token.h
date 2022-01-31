@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cassert>
 #include <string>
 #include <fmt/core.h>
 
@@ -35,12 +36,13 @@ struct Token {
         std::string operator()(const std::string& value) { return value; }
         std::string operator()(double value) { return std::to_string(value); }
         std::string operator()(bool value) { return value ? "true" : "false"; }
+        std::string operator()(CallablePtr value) { assert(false); }
     };
 
-    const TokenType type_;
+    TokenType type_;
 
-    const ValueType lexeme_;
-    const int line_;
+    ValueType lexeme_;
+    int line_;
 
     std::string stringify_token() const {
         switch(type_) {

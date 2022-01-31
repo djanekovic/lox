@@ -21,6 +21,9 @@ std::vector<std::unique_ptr<Stmt>> Parser::parse()
 std::unique_ptr<Stmt> Parser::declaration()
 {
     try {
+        if (match({TokenType::FUN})) {
+            return function_declaration("function");
+        }
         if (match({TokenType::VAR})) {
             return variable_declaration();
         }
@@ -29,6 +32,29 @@ std::unique_ptr<Stmt> Parser::declaration()
         synchronize();
         return nullptr;
     }
+}
+
+std::unique_ptr<Stmt> Parser::function_declaration(std::string_view kind) {
+    // parse function name
+    Token name = consume(TokenType::IDENTIFIER, fmt::format("Expect {} name", kind));
+
+    // parse paremeters
+    consume(TokenType::LEFT_PAREN, fmt::format("Expect '(' after {} name", kind));
+    std::vector<Token> parameters;
+    if (!check(TokenType::RIGHT_PAREN)) {
+        do {
+            if (parameters.size() >= 255) {
+                Lox::error(peek(), "Can't have more than 255 parameters");
+            }
+
+            parameters.push_back(consume(TokenType::IDENTIFIER, "Expect parameter name"));
+        } while(match({TokenType::COMMA}));
+    }
+    consume(TokenType::RIGHT_PAREN, fmt::format("Expected ')' after {} parameters", kind));
+
+    consume(TokenType::LEFT_BRACE, fmt::format("Expected left brace before {} block", kind));
+    std::vector<std::unique_ptr<Stmt>> body = block();
+    return std::make_unique<FunctionStmt>(std::move(name), std::move(parameters), std::move(body));
 }
 
 std::unique_ptr<Stmt> Parser::variable_declaration()
@@ -201,7 +227,7 @@ std::unique_ptr<Expr> Parser::assignment() {
             return std::make_unique<AssignExpr>(std::move(upcast_expr->name_), std::move(value));
         }
 
-        Lox::error(equals, "Invalid assignment target.");
+        Lox::error(std::move(equals), "Invalid assignment target.");
     }
 
     return expr;
@@ -302,7 +328,7 @@ std::unique_ptr<Expr> Parser::factor()
 
 
 /**
- * unary -> ( "!" | "-" ) unary | primary
+ * unary -> ( "!" | "-" ) unary | call
  */
 std::unique_ptr<Expr> Parser::unary()
 {
@@ -312,7 +338,42 @@ std::unique_ptr<Expr> Parser::unary()
         return std::make_unique<UnaryExpr>(std::move(op), std::move(right));
     }
 
-    return primary();
+    return call();
+}
+
+/**
+ * call -> primary ( "(" arguments ? ")" )* ;
+ * arguments -> expression ( "," expression )* ;
+ */
+std::unique_ptr<Expr> Parser::call()
+{
+    auto expr = primary();
+    while(true) {
+        if (match({TokenType::LEFT_PAREN})) {
+            expr = finish_call(std::move(expr));
+        } else {
+            break;
+        }
+    }
+
+    return expr;
+}
+
+std::unique_ptr<Expr> Parser::finish_call(std::unique_ptr<Expr> expr)
+{
+    std::vector<std::unique_ptr<Expr>> arguments;
+    if (!check(TokenType::RIGHT_PAREN)) {
+        do {
+            if (arguments.size() >= 255) {
+                error(peek(), "Can't have more than 255 arguments");
+            }
+            arguments.push_back(expression());
+        } while(match({TokenType::COMMA}));
+    }
+
+    Token paren = consume(TokenType::RIGHT_PAREN, "Expect ')' after arguments");
+
+    return std::make_unique<CallExpr>(std::move(expr), std::move(paren), std::move(arguments));
 }
 
 

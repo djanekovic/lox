@@ -1,5 +1,6 @@
 #pragma once
 #include <memory>
+#include <vector>
 #include <string>
 
 #include "token.h"
@@ -23,8 +24,9 @@ struct GroupingExpr;
 struct UnaryExpr;
 struct BinaryExpr;
 struct VariableExpr;
+struct CallExpr;
 
-//TODO: visitor should maybe return ValueType?
+//TODO: visitor should maybe return ValueType
 struct Visitor {
     virtual void visit_assign_node(const AssignExpr& node) = 0;
     virtual void visit_literal_node(const LiteralExpr& node) = 0;
@@ -33,6 +35,7 @@ struct Visitor {
     virtual void visit_unary_node(const UnaryExpr& node) = 0;
     virtual void visit_binary_node(const BinaryExpr& node) = 0;
     virtual void visit_variable_expr(const VariableExpr& node) = 0;
+    virtual void visit_call_expr(const CallExpr& node) = 0;
 };
 
 
@@ -88,7 +91,7 @@ struct UnaryExpr: public Expr {
     Token op_;
     std::unique_ptr<Expr> expr_;
 
-    UnaryExpr(const Token op, std::unique_ptr<Expr> expr):
+    UnaryExpr(Token op, std::unique_ptr<Expr> expr):
         op_{std::move(op)}, expr_{std::move(expr)} {}
 
     void accept(Visitor& visitor) const override {
@@ -116,6 +119,19 @@ struct VariableExpr: public Expr {
 
     void accept(Visitor& visitor) const override {
         visitor.visit_variable_expr(*this);
+    }
+};
+
+struct CallExpr: public Expr {
+    std::unique_ptr<Expr> callee_;
+    Token paren_;                       // store this token for location
+    std::vector<std::unique_ptr<Expr>> arguments_;
+
+    CallExpr(std::unique_ptr<Expr> callee, Token paren, std::vector<std::unique_ptr<Expr>> arguments):
+        callee_{std::move(callee)}, paren_{std::move(paren)}, arguments_{std::move(arguments)} {}
+
+    void accept(Visitor& visitor) const override {
+        visitor.visit_call_expr(*this);
     }
 };
 

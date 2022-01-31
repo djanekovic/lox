@@ -1,6 +1,7 @@
 #include <cassert>
 #include <type_traits>
 
+#include "function.h"
 #include "interpreter.h"
 
 using namespace lox;
@@ -66,6 +67,11 @@ void Interpreter::execute_block(const std::vector<std::unique_ptr<Stmt>>& statem
     for (const auto& stmt: statements) {
         execute(*stmt);
     }
+}
+
+void Interpreter::visit_function_expression_stmt(const FunctionStmt& stmt) {
+    auto function = std::make_shared<Function>(stmt);
+    environment_->define(std::get<std::string>(stmt.name_.lexeme_), std::move(function));
 }
 
 void Interpreter::visit_block_stmt(const BlockStmt& stmt) {
@@ -228,6 +234,29 @@ void Interpreter::visit_binary_node(const BinaryExpr& expr) {
     __builtin_unreachable();
 }
 
+void Interpreter::visit_call_expr(const CallExpr& node) {
+    evaluate(*node.callee_);
+    const auto callee = value_;
+
+    std::vector<ValueType> arguments;
+    arguments.reserve(node.arguments_.size());
+    for (const auto& argument : node.arguments_) {
+        evaluate(*argument);
+        arguments.push_back(value_);
+    }
+
+    if (!std::holds_alternative<CallablePtr>(callee)) {
+        throw Lox::RuntimeError(node.paren_, "Can only call functions and classes");
+    }
+
+    const auto& function = *std::get<CallablePtr>(callee);
+    if (arguments.size() != function.arity()) {
+        throw Lox::RuntimeError(node.paren_,
+                fmt::format("Expected {} arguments but got {}.", function.arity(), arguments.size()));
+    }
+
+    value_ = function(*this, arguments);
+}
 
 void Interpreter::visit_variable_expr(const VariableExpr& node) {
     value_ = environment_->get(node.name_);

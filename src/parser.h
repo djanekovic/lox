@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <array>
+#include <string_view>
 #include "token.h"
 #include "stmt.h"
 
@@ -12,7 +13,7 @@ class Parser {
         ParseError(): std::runtime_error("") {}
     };
 
-    const std::vector<Token> tokens_;
+    std::vector<Token> tokens_;
     std::size_t current = 0;
 
     bool is_end() const;
@@ -27,6 +28,7 @@ class Parser {
 
     std::unique_ptr<Stmt> declaration();
     std::unique_ptr<Stmt> variable_declaration();
+    std::unique_ptr<Stmt> function_declaration(std::string_view kind);
 
     std::unique_ptr<Stmt> statement();
     std::unique_ptr<Stmt> print_statement();
@@ -45,6 +47,8 @@ class Parser {
     std::unique_ptr<Expr> term();
     std::unique_ptr<Expr> factor();
     std::unique_ptr<Expr> unary();
+    std::unique_ptr<Expr> call();
+    std::unique_ptr<Expr> finish_call(std::unique_ptr<Expr> expr);
     std::unique_ptr<Expr> primary();
 
     bool match(std::initializer_list<TokenType> tokens);

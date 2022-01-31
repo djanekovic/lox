@@ -18,6 +18,8 @@ void run(std::string&& command)
     lox::Scanner scanner(std::move(command));
 
     auto tokens = scanner.scan_tokens();
+    //std::for_each(tokens.cbegin(), tokens.cend(), [](const auto& t) { fmt::print("{}\n", t.stringify_token()); });
+
     lox::Parser parser(std::move(tokens));
     auto statements = parser.parse();
 
