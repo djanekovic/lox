@@ -22,8 +22,6 @@ class Interpreter: public ExprVisitor, public StmtVisitor {
     public:
         EnterEnvironmentGuard(Interpreter& interpreter, std::unique_ptr<Environment>&& env):
             interpreter_{interpreter} // take reference of the current interpreter
-            // old interpreter.environment_ goes to previous and env goes in his place
-            //previous_{std::exchange(interpreter_.environment_, std::move(env))} {}
         {
             previous_ = std::move(interpreter_.environment_);
             interpreter_.environment_ = std::move(env);
@@ -37,8 +35,9 @@ class Interpreter: public ExprVisitor, public StmtVisitor {
 
 
     ValueType value_;
-    std::unique_ptr<Environment> globals_;       // global Environment
-    std::unique_ptr<Environment> environment_;   // current Environment
+    std::unique_ptr<Environment> environment_;   // current Environment.
+                                                 // At initialization, this is global env.
+    Environment *global_environment_ptr_;        // pointer to the global environment
 
     void execute(const Stmt& statement);
     void visit_assign_node(const AssignExpr& node) override;
@@ -56,6 +55,7 @@ class Interpreter: public ExprVisitor, public StmtVisitor {
     void visit_expression_stmt(const ExpressionStmt& stmt) override;
     void visit_if_expression_stmt(const IfExpressionStmt& stmt) override;
     void visit_print_stmt(const PrintStmt& stmt) override;
+    void visit_return_stmt(const ReturnStmt& stmt) override;
     void visit_var_stmt(const VarStmt& stmt) override;
     void visit_while_stmt(const WhileStmt& stmt) override;
 
@@ -80,14 +80,17 @@ class Interpreter: public ExprVisitor, public StmtVisitor {
 
   public:
     Interpreter():
-        globals_{std::make_unique<Environment>()},
-        environment_{std::make_unique<Environment>(*globals_)} {
-        globals_->define("clock", std::make_shared<ClockCallable>());
+        environment_{std::make_unique<Environment>()},
+        // remember a pointer to the global environment
+        global_environment_ptr_{environment_.get()}
+    {
+        // define native functions in global environment
+        environment_->define("clock", std::make_shared<ClockCallable>());
     }
 
     void interpret(std::vector<std::unique_ptr<Stmt>> statements);
 
     void execute_block(const std::vector<std::unique_ptr<Stmt>>& statements, std::unique_ptr<Environment>&& env);
-    Environment *get_globals_ptr() const { return globals_.get(); }
+    Environment *get_globals_ptr() const { return global_environment_ptr_; }
 };
 } // namespace lox

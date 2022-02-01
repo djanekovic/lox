@@ -2,6 +2,7 @@
 #include <type_traits>
 
 #include "function.h"
+#include "return.h"
 
 #include "expr/assign_expr.h"
 #include "expr/literal_expr.h"
@@ -19,6 +20,7 @@
 #include "stmt/expression_stmt.h"
 #include "stmt/while_stmt.h"
 #include "stmt/print_stmt.h"
+#include "stmt/return_stmt.h"
 #include "interpreter.h"
 
 using namespace lox;
@@ -103,6 +105,15 @@ void Interpreter::visit_expression_stmt(const ExpressionStmt& stmt) {
 void Interpreter::visit_print_stmt(const PrintStmt& stmt) {
     evaluate(*stmt.expression_);
     fmt::print("{}\n", std::visit(Token::PrinterVisitor(), value_));
+}
+
+void Interpreter::visit_return_stmt(const ReturnStmt& stmt) {
+    value_ = std::monostate();
+    if (stmt.expression_) {
+        evaluate(*stmt.expression_);
+    }
+
+    throw Return(value_);
 }
 
 void Interpreter::visit_if_expression_stmt(const IfExpressionStmt& stmt) {

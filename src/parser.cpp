@@ -19,8 +19,9 @@
 #include "stmt/block_stmt.h"
 #include "stmt/if_expression_stmt.h"
 #include "stmt/expression_stmt.h"
-#include "stmt/while_stmt.h"
 #include "stmt/print_stmt.h"
+#include "stmt/return_stmt.h"
+#include "stmt/while_stmt.h"
 
 #include "parser.h"
 
@@ -92,6 +93,10 @@ std::unique_ptr<Stmt> Parser::statement() {
 
     if (match({TokenType::PRINT})) {
         return print_statement();
+    }
+
+    if (match({TokenType::RETURN})) {
+        return return_statement();
     }
 
     if (match({TokenType::FOR})) {
@@ -214,6 +219,20 @@ std::unique_ptr<Stmt> Parser::print_statement() {
     auto expr = expression();
     consume(TokenType::SEMICOLON, "Expect ; after value");
     return std::make_unique<PrintStmt>(std::move(expr));
+}
+
+/**
+ * return_statement -> "return" expression? ";"
+ */
+std::unique_ptr<Stmt> Parser::return_statement() {
+    auto keyword = previous();
+    std::unique_ptr<Expr> value;
+    if (!check(TokenType::SEMICOLON)) {
+        value = expression();
+    }
+
+    consume(TokenType::SEMICOLON, "Expect ';' after return value");
+    return std::make_unique<ReturnStmt>(std::move(keyword), std::move(value));
 }
 
 /**

@@ -14,6 +14,7 @@ struct ExpressionStmt;
 struct FunctionStmt;
 struct IfExpressionStmt;
 struct PrintStmt;
+struct ReturnStmt;
 struct VarStmt;
 struct WhileStmt;
 
@@ -23,6 +24,7 @@ struct StmtVisitor {
     virtual void visit_function_expression_stmt(const FunctionStmt& node) = 0;
     virtual void visit_if_expression_stmt(const IfExpressionStmt& node) = 0;
     virtual void visit_print_stmt(const PrintStmt& node) = 0;
+    virtual void visit_return_stmt(const ReturnStmt& node) = 0;
     virtual void visit_var_stmt(const VarStmt& node) = 0;
     virtual void visit_while_stmt(const WhileStmt& node) = 0;
 };
