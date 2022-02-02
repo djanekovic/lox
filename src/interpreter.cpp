@@ -80,7 +80,7 @@ void Interpreter::execute(const Stmt& statement) {
 }
 
 // execute this block in new environment
-void Interpreter::execute_block(const std::vector<std::unique_ptr<Stmt>>& statements, std::unique_ptr<Environment>&& env) {
+void Interpreter::execute_block(const std::vector<std::unique_ptr<Stmt>>& statements, std::shared_ptr<Environment>&& env) {
     // this is a cool RAII trick I got from here: https://github.com/eliasdaler/lox/blob/master/src/Interpreter.cpp#L376
     EnterEnvironmentGuard ee{*this, std::move(env)};
     for (const auto& stmt: statements) {
@@ -89,13 +89,15 @@ void Interpreter::execute_block(const std::vector<std::unique_ptr<Stmt>>& statem
 }
 
 void Interpreter::visit_function_expression_stmt(const FunctionStmt& stmt) {
-    auto function = std::make_shared<Function>(stmt);
+    // here we are passing environment_ by value, causing ref count to increment
+    // Function need to have it's closure even if interpreter is not using it anymore!
+    auto function = std::make_shared<Function>(stmt, environment_);
     environment_->define(std::get<std::string>(stmt.name_.lexeme_), std::move(function));
 }
 
 void Interpreter::visit_block_stmt(const BlockStmt& stmt) {
     // create new environment where environment_ is parent environment(enclosure)
-    execute_block(stmt.statements_, std::make_unique<Environment>(environment_.get()));
+    execute_block(stmt.statements_, std::make_shared<Environment>(environment_));
 }
 
 void Interpreter::visit_expression_stmt(const ExpressionStmt& stmt) {

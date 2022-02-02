@@ -17,10 +17,10 @@ namespace lox {
 class Interpreter: public ExprVisitor, public StmtVisitor {
     class EnterEnvironmentGuard {
         Interpreter& interpreter_;
-        std::unique_ptr<Environment> previous_;
+        std::shared_ptr<Environment> previous_;
 
     public:
-        EnterEnvironmentGuard(Interpreter& interpreter, std::unique_ptr<Environment>&& env):
+        EnterEnvironmentGuard(Interpreter& interpreter, std::shared_ptr<Environment>&& env):
             interpreter_{interpreter} // take reference of the current interpreter
         {
             previous_ = std::move(interpreter_.environment_);
@@ -35,9 +35,8 @@ class Interpreter: public ExprVisitor, public StmtVisitor {
 
 
     ValueType value_;
-    std::unique_ptr<Environment> environment_;   // current Environment.
+    std::shared_ptr<Environment> environment_;   // current Environment.
                                                  // At initialization, this is global env.
-    Environment *global_environment_ptr_;        // pointer to the global environment
 
     void execute(const Stmt& statement);
     void visit_assign_node(const AssignExpr& node) override;
@@ -79,18 +78,13 @@ class Interpreter: public ExprVisitor, public StmtVisitor {
     }
 
   public:
-    Interpreter():
-        environment_{std::make_unique<Environment>()},
-        // remember a pointer to the global environment
-        global_environment_ptr_{environment_.get()}
-    {
+    Interpreter(): environment_{std::make_shared<Environment>()} {
         // define native functions in global environment
         environment_->define("clock", std::make_shared<ClockCallable>());
     }
 
     void interpret(std::vector<std::unique_ptr<Stmt>> statements);
 
-    void execute_block(const std::vector<std::unique_ptr<Stmt>>& statements, std::unique_ptr<Environment>&& env);
-    Environment *get_globals_ptr() const { return global_environment_ptr_; }
+    void execute_block(const std::vector<std::unique_ptr<Stmt>>& statements, std::shared_ptr<Environment>&& env);
 };
 } // namespace lox
