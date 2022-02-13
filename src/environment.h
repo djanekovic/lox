@@ -7,7 +7,7 @@
 #include "lox.h"
 
 namespace lox {
-class Environment {
+class Environment: public std::enable_shared_from_this<Environment> {
     std::shared_ptr<Environment> enclosing_;
     std::unordered_map<std::string, ValueType> values_;
 
@@ -21,6 +21,12 @@ class Environment {
 
     void define(const std::string& name, ValueType value);
     ValueType get(const Token& name) const;
+    ValueType get_at(std::size_t distance, const Token& name) const;
     void assign(const Token& name, ValueType value);
+    void assign_at(std::size_t distance, const Token& name, ValueType value);
+
+  private:
+    const Environment* ancestor(std::size_t distance) const;
+    Environment* ancestor(std::size_t distance);
 };
 } //namespace lox

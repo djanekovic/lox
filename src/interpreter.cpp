@@ -63,6 +63,15 @@ struct PlusVisitor {
 };
 
 
+Interpreter::Interpreter():
+    environment_{std::make_shared<Environment>()},
+    globals_{environment_.get()} {
+    // define native functions in global environment
+    environment_->define("clock", std::make_shared<ClockCallable>());
+}
+
+Interpreter::~Interpreter() = default;
+
 void Interpreter::interpret(std::vector<std::unique_ptr<Stmt>> statements) {
     try {
         for(const auto& statement: statements) {
@@ -77,6 +86,10 @@ void Interpreter::interpret(std::vector<std::unique_ptr<Stmt>> statements) {
 /** Handle statements **/
 void Interpreter::execute(const Stmt& statement) {
     statement.accept(*this);
+}
+
+void Interpreter::resolve(const Expr& expr, std::size_t depth) {
+    locals_.insert({&expr, depth});
 }
 
 // execute this block in new environment
@@ -152,7 +165,12 @@ void Interpreter::visit_while_stmt(const WhileStmt& stmt) {
 
 void Interpreter::visit_assign_node(const AssignExpr& expr) {
     evaluate(*expr.value_);
-    environment_->assign(expr.name_, value_);
+
+    if (const auto it = locals_.find(&expr); it != std::cend(locals_)) {
+        environment_->assign_at(it->second, expr.name_, value_);
+    } else {
+        globals_->assign(expr.name_, value_);
+    }
 }
 
 
@@ -289,5 +307,13 @@ void Interpreter::visit_call_expr(const CallExpr& node) {
 }
 
 void Interpreter::visit_variable_expr(const VariableExpr& node) {
-    value_ = environment_->get(node.name_);
+    value_ = lookup_variable(node);
+}
+
+ValueType Interpreter::lookup_variable(const VariableExpr& node) {
+    if (const auto it = locals_.find(&node); it != std::cend(locals_)) {
+        return environment_->get_at(it->second, node.name_);
+    } else {
+        return globals_->get(node.name_);
+    }
 }

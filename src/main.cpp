@@ -4,6 +4,7 @@
 
 #include "scanner.h"
 #include "parser.h"
+#include "resolver.h"
 #include "ast_pretty_printer.h"
 #include "interpreter.h"
 #include "lox.h"
@@ -23,16 +24,20 @@ void run(std::string&& command)
     lox::Parser parser(std::move(tokens));
     auto statements = parser.parse();
 
-    if (lox::Lox::had_error) {
-        return;
-    }
-
 #if 0
     lox::ASTPrettyPrinter printer;
     expression->accept(printer);
 
     fmt::print("{}\n", printer.to_string());
 #endif
+
+    lox::Resolver resolver(interpreter);
+    resolver.resolve(statements);
+
+    if (lox::Lox::had_error) {
+        return;
+    }
+
 
     interpreter.interpret(std::move(statements));
 }

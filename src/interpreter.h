@@ -1,5 +1,7 @@
 #pragma once
 
+#include <map>
+#include <functional>
 #include <memory>
 #include <vector>
 #include <string>
@@ -37,6 +39,9 @@ class Interpreter: public ExprVisitor, public StmtVisitor {
     ValueType value_;
     std::shared_ptr<Environment> environment_;   // current Environment.
                                                  // At initialization, this is global env.
+    Environment *globals_;                       // pointer to global env -> this can maybe be weak_ptr
+
+    std::map<const Expr*, std::size_t> locals_;
 
     void execute(const Stmt& statement);
     void visit_assign_node(const AssignExpr& node) override;
@@ -58,6 +63,8 @@ class Interpreter: public ExprVisitor, public StmtVisitor {
     void visit_var_stmt(const VarStmt& stmt) override;
     void visit_while_stmt(const WhileStmt& stmt) override;
 
+    ValueType lookup_variable(const VariableExpr& node);
+
     std::string stringify_value() const;
 
     template<typename OperatorType>
@@ -78,13 +85,11 @@ class Interpreter: public ExprVisitor, public StmtVisitor {
     }
 
   public:
-    Interpreter(): environment_{std::make_shared<Environment>()} {
-        // define native functions in global environment
-        environment_->define("clock", std::make_shared<ClockCallable>());
-    }
+    Interpreter();
+    ~Interpreter();
 
     void interpret(std::vector<std::unique_ptr<Stmt>> statements);
-
+    void resolve(const Expr& expr, std::size_t depth);
     void execute_block(const std::vector<std::unique_ptr<Stmt>>& statements, std::shared_ptr<Environment>&& env);
 };
 } // namespace lox
