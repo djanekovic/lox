@@ -10,6 +10,7 @@ struct Stmt {
 };
 
 struct BlockStmt;
+struct ClassStmt;
 struct ExpressionStmt;
 struct FunctionStmt;
 struct IfExpressionStmt;
@@ -20,6 +21,7 @@ struct WhileStmt;
 
 struct StmtVisitor {
     virtual void visit_block_stmt(const BlockStmt& node) = 0;
+    virtual void visit_class_stmt(const ClassStmt& node) = 0;
     virtual void visit_expression_stmt(const ExpressionStmt& node) = 0;
     virtual void visit_function_expression_stmt(const FunctionStmt& node) = 0;
     virtual void visit_if_expression_stmt(const IfExpressionStmt& node) = 0;

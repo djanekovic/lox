@@ -1,4 +1,4 @@
-#include "environment.h"
+#include "lox/environment.h"
 
 using namespace lox;
 void Environment::define(const std::string& name, ValueType value) {

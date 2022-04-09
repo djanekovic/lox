@@ -1,25 +1,27 @@
 #include <algorithm>
 #include <optional>
 
-#include "expr/assign_expr.h"
-#include "expr/literal_expr.h"
-#include "expr/logical_expr.h"
-#include "expr/variable_expr.h"
-#include "expr/grouping_expr.h"
-#include "expr/call_expr.h"
-#include "expr/unary_expr.h"
-#include "expr/binary_expr.h"
+#include "lox/expr/assign_expr.h"
+#include "lox/expr/literal_expr.h"
+#include "lox/expr/logical_expr.h"
+#include "lox/expr/variable_expr.h"
+#include "lox/expr/grouping_expr.h"
+#include "lox/expr/call_expr.h"
+#include "lox/expr/get_expr.h"
+#include "lox/expr/unary_expr.h"
+#include "lox/expr/binary_expr.h"
 
-#include "stmt/function_stmt.h"
-#include "stmt/var_stmt.h"
-#include "stmt/block_stmt.h"
-#include "stmt/if_expression_stmt.h"
-#include "stmt/expression_stmt.h"
-#include "stmt/while_stmt.h"
-#include "stmt/print_stmt.h"
-#include "stmt/return_stmt.h"
+#include "lox/stmt/class_stmt.h"
+#include "lox/stmt/function_stmt.h"
+#include "lox/stmt/var_stmt.h"
+#include "lox/stmt/block_stmt.h"
+#include "lox/stmt/if_expression_stmt.h"
+#include "lox/stmt/expression_stmt.h"
+#include "lox/stmt/while_stmt.h"
+#include "lox/stmt/print_stmt.h"
+#include "lox/stmt/return_stmt.h"
 
-#include "resolver.h"
+#include "lox/resolver.h"
 
 using namespace lox;
 
@@ -64,6 +66,10 @@ void Resolver::visit_call_expr(const CallExpr& node) {
             [&](const auto& argument) { resolve(*argument); });
 }
 
+void Resolver::visit_get_expr(const GetExpr& node) {
+    resolve(*node.object_);
+}
+
 void Resolver::visit_block_stmt(const BlockStmt& stmt) {
     begin_scope();
     resolve(stmt.statements_);
@@ -87,6 +93,11 @@ void Resolver::visit_if_expression_stmt(const IfExpressionStmt& stmt) {
     if (stmt.else_stmt_) {
         resolve(*stmt.else_stmt_);
     }
+}
+
+void Resolver::visit_class_stmt(const ClassStmt& stmt) {
+    declare(stmt.name_);
+    define(stmt.name_);
 }
 
 void Resolver::visit_print_stmt(const PrintStmt& stmt) {

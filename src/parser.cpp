@@ -3,27 +3,29 @@
 #include <numeric>
 #include <functional>
 
-#include "lox.h"
+#include "lox/lox.h"
 
-#include "expr/assign_expr.h"
-#include "expr/literal_expr.h"
-#include "expr/logical_expr.h"
-#include "expr/variable_expr.h"
-#include "expr/grouping_expr.h"
-#include "expr/call_expr.h"
-#include "expr/unary_expr.h"
-#include "expr/binary_expr.h"
+#include "lox/expr/assign_expr.h"
+#include "lox/expr/literal_expr.h"
+#include "lox/expr/logical_expr.h"
+#include "lox/expr/variable_expr.h"
+#include "lox/expr/grouping_expr.h"
+#include "lox/expr/call_expr.h"
+#include "lox/expr/get_expr.h"
+#include "lox/expr/unary_expr.h"
+#include "lox/expr/binary_expr.h"
 
-#include "stmt/function_stmt.h"
-#include "stmt/var_stmt.h"
-#include "stmt/block_stmt.h"
-#include "stmt/if_expression_stmt.h"
-#include "stmt/expression_stmt.h"
-#include "stmt/print_stmt.h"
-#include "stmt/return_stmt.h"
-#include "stmt/while_stmt.h"
+#include "lox/stmt/function_stmt.h"
+#include "lox/stmt/var_stmt.h"
+#include "lox/stmt/block_stmt.h"
+#include "lox/stmt/class_stmt.h"
+#include "lox/stmt/if_expression_stmt.h"
+#include "lox/stmt/expression_stmt.h"
+#include "lox/stmt/print_stmt.h"
+#include "lox/stmt/return_stmt.h"
+#include "lox/stmt/while_stmt.h"
 
-#include "parser.h"
+#include "lox/parser.h"
 
 using namespace lox;
 
@@ -37,9 +39,18 @@ std::vector<std::unique_ptr<Stmt>> Parser::parse()
     return statements;
 }
 
+/**
+ * declaration -> classDecl
+ *              | funDecl
+ *              | varDecl
+ *              | statement ;
+ */
 std::unique_ptr<Stmt> Parser::declaration()
 {
     try {
+        if (match({TokenType::CLASS})) {
+            return class_declaration();
+        }
         if (match({TokenType::FUN})) {
             return function_declaration("function");
         }
@@ -53,7 +64,26 @@ std::unique_ptr<Stmt> Parser::declaration()
     }
 }
 
-std::unique_ptr<Stmt> Parser::function_declaration(std::string_view kind) {
+
+std::unique_ptr<ClassStmt> Parser::class_declaration() {
+    Token name = consume(TokenType::IDENTIFIER, "Expect class name.");
+    consume(TokenType::LEFT_BRACE, "Expect '{' before class body.");
+
+    std::vector<std::unique_ptr<FunctionStmt>> methods;
+    while(!check(TokenType::RIGHT_BRACE) && !is_end()) {
+        methods.push_back(function_declaration("method"));
+    }
+
+    consume(TokenType::RIGHT_BRACE, "Expect '}' after class body.");
+    return std::make_unique<ClassStmt>(std::move(name), std::move(methods));
+}
+
+
+/**
+ * function -> IDENTIFIER "(" parameters? ")" block ;
+ * parameters -> IDENTIFIER ( "," IDENTIFIER )* ;
+ */
+std::unique_ptr<FunctionStmt> Parser::function_declaration(std::string_view kind) {
     // parse function name
     Token name = consume(TokenType::IDENTIFIER, fmt::format("Expect {} name", kind));
 
@@ -76,7 +106,7 @@ std::unique_ptr<Stmt> Parser::function_declaration(std::string_view kind) {
     return std::make_unique<FunctionStmt>(std::move(name), std::move(parameters), std::move(body));
 }
 
-std::unique_ptr<Stmt> Parser::variable_declaration()
+std::unique_ptr<VarStmt> Parser::variable_declaration()
 {
     Token name = consume(TokenType::IDENTIFIER, "Expect variable name");
     auto expr = match({TokenType::EQUAL}) ? expression() : std::unique_ptr<Expr>();
@@ -199,7 +229,7 @@ std::vector<std::unique_ptr<Stmt>> Parser::block() {
 /**
  * if statement -> "if" "(" expression ")" statement ( "else" statement )? ;
  */
-std::unique_ptr<Stmt> Parser::if_statement() {
+std::unique_ptr<IfExpressionStmt> Parser::if_statement() {
     consume(TokenType::LEFT_PAREN, "Expect '(' after 'if'");
     auto condition = expression();
     consume(TokenType::RIGHT_PAREN, "Expect ')' after if condition");
@@ -215,7 +245,7 @@ std::unique_ptr<Stmt> Parser::if_statement() {
 /**
  * print_statement -> "print" expression ";"
  */
-std::unique_ptr<Stmt> Parser::print_statement() {
+std::unique_ptr<PrintStmt> Parser::print_statement() {
     auto expr = expression();
     consume(TokenType::SEMICOLON, "Expect ; after value");
     return std::make_unique<PrintStmt>(std::move(expr));
@@ -224,7 +254,7 @@ std::unique_ptr<Stmt> Parser::print_statement() {
 /**
  * return_statement -> "return" expression? ";"
  */
-std::unique_ptr<Stmt> Parser::return_statement() {
+std::unique_ptr<ReturnStmt> Parser::return_statement() {
     auto keyword = previous();
     std::unique_ptr<Expr> value;
     if (!check(TokenType::SEMICOLON)) {
@@ -238,7 +268,7 @@ std::unique_ptr<Stmt> Parser::return_statement() {
 /**
  * expression_statement -> expression ";"
  */
-std::unique_ptr<Stmt> Parser::expression_statement() {
+std::unique_ptr<ExpressionStmt> Parser::expression_statement() {
     auto expr = expression();
     consume(TokenType::SEMICOLON, "Expect ; after value");
     return std::make_unique<ExpressionStmt>(std::move(expr));
@@ -379,7 +409,7 @@ std::unique_ptr<Expr> Parser::unary()
 }
 
 /**
- * call -> primary ( "(" arguments ? ")" )* ;
+ * call -> primary ( "(" arguments ? ")" | "." identifier )*;
  * arguments -> expression ( "," expression )* ;
  */
 std::unique_ptr<Expr> Parser::call()
@@ -388,6 +418,9 @@ std::unique_ptr<Expr> Parser::call()
     while(true) {
         if (match({TokenType::LEFT_PAREN})) {
             expr = finish_call(std::move(expr));
+        } else if (match({TokenType::DOT})) {
+            auto name = consume(TokenType::IDENTIFIER, "Expect property name after '.'.");
+            expr = std::make_unique<GetExpr>(std::move(expr), std::move(name));
         } else {
             break;
         }
@@ -396,7 +429,7 @@ std::unique_ptr<Expr> Parser::call()
     return expr;
 }
 
-std::unique_ptr<Expr> Parser::finish_call(std::unique_ptr<Expr> expr)
+std::unique_ptr<CallExpr> Parser::finish_call(std::unique_ptr<Expr> expr)
 {
     std::vector<std::unique_ptr<Expr>> arguments;
     if (!check(TokenType::RIGHT_PAREN)) {

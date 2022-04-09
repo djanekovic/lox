@@ -28,16 +28,17 @@ class Parser {
 
 
     std::unique_ptr<Stmt> declaration();
-    std::unique_ptr<Stmt> variable_declaration();
-    std::unique_ptr<Stmt> function_declaration(std::string_view kind);
+    std::unique_ptr<ClassStmt> class_declaration();
+    std::unique_ptr<VarStmt> variable_declaration();
+    std::unique_ptr<FunctionStmt> function_declaration(std::string_view kind);
 
     std::unique_ptr<Stmt> statement();
-    std::unique_ptr<Stmt> print_statement();
-    std::unique_ptr<Stmt> return_statement();
-    std::unique_ptr<Stmt> if_statement();
+    std::unique_ptr<PrintStmt> print_statement();
+    std::unique_ptr<ReturnStmt> return_statement();
+    std::unique_ptr<IfExpressionStmt> if_statement();
     std::unique_ptr<Stmt> while_statement();
     std::unique_ptr<Stmt> for_statement();
-    std::unique_ptr<Stmt> expression_statement();
+    std::unique_ptr<ExpressionStmt> expression_statement();
     std::vector<std::unique_ptr<Stmt>> block();
 
     std::unique_ptr<Expr> expression();
@@ -50,7 +51,7 @@ class Parser {
     std::unique_ptr<Expr> factor();
     std::unique_ptr<Expr> unary();
     std::unique_ptr<Expr> call();
-    std::unique_ptr<Expr> finish_call(std::unique_ptr<Expr> expr);
+    std::unique_ptr<CallExpr> finish_call(std::unique_ptr<Expr> expr);
     std::unique_ptr<Expr> primary();
 
     bool match(std::initializer_list<TokenType> tokens);

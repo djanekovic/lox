@@ -1,27 +1,32 @@
 #include <cassert>
 #include <type_traits>
+#include <variant>
 
-#include "function.h"
-#include "return.h"
+#include "lox/function.h"
+#include "lox/return.h"
+#include "lox/instance.h"
+#include "lox/class.h"
 
-#include "expr/assign_expr.h"
-#include "expr/literal_expr.h"
-#include "expr/logical_expr.h"
-#include "expr/variable_expr.h"
-#include "expr/grouping_expr.h"
-#include "expr/call_expr.h"
-#include "expr/unary_expr.h"
-#include "expr/binary_expr.h"
+#include "lox/expr/assign_expr.h"
+#include "lox/expr/literal_expr.h"
+#include "lox/expr/logical_expr.h"
+#include "lox/expr/variable_expr.h"
+#include "lox/expr/grouping_expr.h"
+#include "lox/expr/call_expr.h"
+#include "lox/expr/get_expr.h"
+#include "lox/expr/unary_expr.h"
+#include "lox/expr/binary_expr.h"
 
-#include "stmt/function_stmt.h"
-#include "stmt/var_stmt.h"
-#include "stmt/block_stmt.h"
-#include "stmt/if_expression_stmt.h"
-#include "stmt/expression_stmt.h"
-#include "stmt/while_stmt.h"
-#include "stmt/print_stmt.h"
-#include "stmt/return_stmt.h"
-#include "interpreter.h"
+#include "lox/stmt/function_stmt.h"
+#include "lox/stmt/class_stmt.h"
+#include "lox/stmt/var_stmt.h"
+#include "lox/stmt/block_stmt.h"
+#include "lox/stmt/if_expression_stmt.h"
+#include "lox/stmt/expression_stmt.h"
+#include "lox/stmt/while_stmt.h"
+#include "lox/stmt/print_stmt.h"
+#include "lox/stmt/return_stmt.h"
+#include "lox/interpreter.h"
 
 using namespace lox;
 
@@ -113,6 +118,14 @@ void Interpreter::visit_block_stmt(const BlockStmt& stmt) {
     execute_block(stmt.statements_, std::make_shared<Environment>(environment_));
 }
 
+#if 0
+void Interpreter::visit_class_stmt(const ClassStmt& stmt) {
+    const auto class_name = std::get<std::string>(stmt.name_.lexeme_);
+    environment_->define(class_name, std::monostate());
+    auto lox_class = std::make_shared<Class>(class_name);
+    environment_->assign(class_name, lox_class);
+}
+#endif
 void Interpreter::visit_expression_stmt(const ExpressionStmt& stmt) {
     evaluate(*stmt.expression_);
 }
@@ -305,6 +318,15 @@ void Interpreter::visit_call_expr(const CallExpr& node) {
 
     value_ = function(*this, arguments);
 }
+
+#if 0
+void Interpreter::visit_get_expr(const GetExpr& node) {
+    evaluate(*node.object_);
+    if (std::holds_alternative<InstancePtr>(value_)) {
+        return std::get<InstancePtr>(value_)->get(std::get<std::string>(node.name_.lexeme_));
+    }
+}
+#endif
 
 void Interpreter::visit_variable_expr(const VariableExpr& node) {
     value_ = lookup_variable(node);

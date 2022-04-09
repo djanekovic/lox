@@ -1,5 +1,5 @@
 #include <chrono>
-#include "clock_callable.h"
+#include "lox/native/clock_callable.h"
 
 using namespace lox;
 ValueType ClockCallable::operator()([[maybe_unused]] Interpreter& interpreter,

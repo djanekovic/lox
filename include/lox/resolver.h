@@ -29,8 +29,10 @@ private:
     void visit_grouping_node(const GroupingExpr& node) override;
     void visit_variable_expr(const VariableExpr& node) override;
     void visit_call_expr(const CallExpr& node) override;
+    void visit_get_expr(const GetExpr& node) override;
     void visit_block_stmt(const BlockStmt& stmt) override;
 
+    void visit_class_stmt(const ClassStmt& stmt) override;
     void visit_function_expression_stmt(const FunctionStmt& stmt) override;
     void visit_expression_stmt(const ExpressionStmt& stmt) override;
     void visit_if_expression_stmt(const IfExpressionStmt& stmt) override;

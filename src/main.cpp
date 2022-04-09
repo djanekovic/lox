@@ -2,12 +2,12 @@
 #include <memory>
 #include <fmt/core.h>
 
-#include "scanner.h"
-#include "parser.h"
-#include "resolver.h"
-#include "ast_pretty_printer.h"
-#include "interpreter.h"
-#include "lox.h"
+#include "lox/scanner.h"
+#include "lox/parser.h"
+#include "lox/resolver.h"
+#include "lox/ast_pretty_printer.h"
+#include "lox/interpreter.h"
+#include "lox/lox.h"
 
 namespace {
 // we want to reuse this object

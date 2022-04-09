@@ -2,8 +2,8 @@
 #include <variant>
 #include <vector>
 
-#include "scanner.h"
-#include "lox.h"
+#include "lox/scanner.h"
+#include "lox/lox.h"
 
 using namespace lox;
 
