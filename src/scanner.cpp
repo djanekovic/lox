@@ -176,6 +176,6 @@ std::vector<Token> Scanner::scan_tokens()
         scan_token();
     }
 
-    tokens_.emplace_back(TokenType::END, "", line);
+    tokens_.emplace_back(TokenType::END, line);
     return tokens_;
 }
