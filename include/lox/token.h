@@ -159,5 +159,9 @@ public:
     std::string to_string() const {
         return fmt::format("[{} {} {}]", Token::get_token_type_string(type_), stringify_token(), line_);
     }
+
+    friend bool operator==(const Token& lhs, const Token& rhs) {
+        return rhs.type_ == lhs.type_ && rhs.lexeme_ == lhs.lexeme_ && rhs.line_ == lhs.line_;
+    }
 };
 } //namespace lox
