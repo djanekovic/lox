@@ -7,7 +7,7 @@
 #include "value_type.h"
 
 namespace lox {
-enum class TokenType {
+enum class TokenType: std::int8_t {
     // Single character tokens
     LEFT_PAREN, RIGHT_PAREN, LEFT_BRACE, RIGHT_BRACE,
     COMMA, DOT, MINUS, PLUS, SEMICOLON, SLASH, STAR,
@@ -30,7 +30,8 @@ enum class TokenType {
 
 
 
-struct Token {
+class Token {
+public:
     struct PrinterVisitor {
         std::string operator()(std::monostate value) { return "nil"; }
         std::string operator()(const std::string& value) { return value; }
@@ -39,63 +40,28 @@ struct Token {
         std::string operator()(CallablePtr value) { assert(false); }
     };
 
-    TokenType type_;
+    Token(TokenType type, std::size_t line): Token(type, std::monostate(), line) {}
 
-    ValueType lexeme_;
-    int line_;
+    template<typename LexemeType>
+    Token(TokenType type, LexemeType lexeme, std::size_t line):
+        type_{type}, lexeme_(std::forward<LexemeType>(lexeme)), line_{line} {}
 
-    std::string stringify_token() const {
-        switch(type_) {
-            case TokenType::LEFT_PAREN:     return "(";
-            case TokenType::RIGHT_PAREN:    return ")";
-            case TokenType::LEFT_BRACE:     return "{";
-            case TokenType::RIGHT_BRACE:    return "}";
-            case TokenType::COMMA:          return ",";
-            case TokenType::DOT:            return ".";
-            case TokenType::MINUS:          return "-";
-            case TokenType::PLUS:           return "+";
-            case TokenType::SEMICOLON:      return ";";
-            case TokenType::SLASH:          return "/";
-            case TokenType::STAR:           return "*";
-
-            case TokenType::BANG:           return "!";
-            case TokenType::EQUAL:          return "=";
-            case TokenType::GREATER:        return ">";
-            case TokenType::LESS:           return "<";
-
-            case TokenType::BANG_EQUAL:     return "!=";
-            case TokenType::EQUAL_EQUAL:    return "==";
-            case TokenType::GREATER_EQUAL:  return ">=";
-            case TokenType::LESS_EQUAL:     return "<=";
-
-            case TokenType::IDENTIFIER:     return std::get<std::string>(lexeme_);
-            case TokenType::STRING:         return fmt::format("\"{}\"", std::get<std::string>(lexeme_));
-            case TokenType::NUMBER:         return std::to_string(std::get<double>(lexeme_));
-
-            case TokenType::AND:            return "and";
-            case TokenType::CLASS:          return "class";
-            case TokenType::ELSE:           return "else";
-            case TokenType::FALSE:          return "false";
-            case TokenType::FOR:            return "for";
-            case TokenType::FUN:            return "fun";
-            case TokenType::IF:             return "if";
-            case TokenType::NIL:            return "nil";
-            case TokenType::OR:             return "or";
-            case TokenType::PRINT:          return "print";
-            case TokenType::RETURN:         return "return";
-            case TokenType::SUPER:          return "super";
-            case TokenType::THIS:           return "this";
-            case TokenType::TRUE:           return "true";
-            case TokenType::VAR:            return "var";
-            case TokenType::WHILE:          return "while";
-
-            case TokenType::END:            return "";
-        }
-
-        __builtin_unreachable();
+    std::string to_string() const {
+        return fmt::format("[{} {} {}]", Token::get_token_type_string(type_), stringify_token(), line_);
     }
 
-    private:
+
+    //TODO: try to move this to free function and implement just for the test case
+    friend bool operator==(const Token& lhs, const Token& rhs) {
+        return rhs.type_ == lhs.type_ && rhs.lexeme_ == lhs.lexeme_ && rhs.line_ == lhs.line_;
+    }
+
+    TokenType type_;
+    ValueType lexeme_;
+    std::size_t line_;
+
+private:
+
     static std::string_view get_token_type_string(const TokenType type) {
         switch(type) {
             case TokenType::LEFT_PAREN:     return "LEFT_PAREN";
@@ -147,21 +113,55 @@ struct Token {
         __builtin_unreachable();
     }
 
-public:
-    Token(): Token(TokenType::END, 0) {}
+    std::string stringify_token() const {
+        switch(type_) {
+            case TokenType::LEFT_PAREN:     return "(";
+            case TokenType::RIGHT_PAREN:    return ")";
+            case TokenType::LEFT_BRACE:     return "{";
+            case TokenType::RIGHT_BRACE:    return "}";
+            case TokenType::COMMA:          return ",";
+            case TokenType::DOT:            return ".";
+            case TokenType::MINUS:          return "-";
+            case TokenType::PLUS:           return "+";
+            case TokenType::SEMICOLON:      return ";";
+            case TokenType::SLASH:          return "/";
+            case TokenType::STAR:           return "*";
 
-    Token(TokenType type, int line): Token(type, std::monostate(), line) {}
+            case TokenType::BANG:           return "!";
+            case TokenType::EQUAL:          return "=";
+            case TokenType::GREATER:        return ">";
+            case TokenType::LESS:           return "<";
 
-    template<typename LexemeType>
-    Token(TokenType type, LexemeType lexeme, int line):
-        type_{type}, lexeme_(std::forward<LexemeType>(lexeme)), line_{line} {}
+            case TokenType::BANG_EQUAL:     return "!=";
+            case TokenType::EQUAL_EQUAL:    return "==";
+            case TokenType::GREATER_EQUAL:  return ">=";
+            case TokenType::LESS_EQUAL:     return "<=";
 
-    std::string to_string() const {
-        return fmt::format("[{} {} {}]", Token::get_token_type_string(type_), stringify_token(), line_);
-    }
+            case TokenType::IDENTIFIER:     return std::get<std::string>(lexeme_);
+            case TokenType::STRING:         return fmt::format("\"{}\"", std::get<std::string>(lexeme_));
+            case TokenType::NUMBER:         return std::to_string(std::get<double>(lexeme_));
 
-    friend bool operator==(const Token& lhs, const Token& rhs) {
-        return rhs.type_ == lhs.type_ && rhs.lexeme_ == lhs.lexeme_ && rhs.line_ == lhs.line_;
+            case TokenType::AND:            return "and";
+            case TokenType::CLASS:          return "class";
+            case TokenType::ELSE:           return "else";
+            case TokenType::FALSE:          return "false";
+            case TokenType::FOR:            return "for";
+            case TokenType::FUN:            return "fun";
+            case TokenType::IF:             return "if";
+            case TokenType::NIL:            return "nil";
+            case TokenType::OR:             return "or";
+            case TokenType::PRINT:          return "print";
+            case TokenType::RETURN:         return "return";
+            case TokenType::SUPER:          return "super";
+            case TokenType::THIS:           return "this";
+            case TokenType::TRUE:           return "true";
+            case TokenType::VAR:            return "var";
+            case TokenType::WHILE:          return "while";
+
+            case TokenType::END:            return "";
+        }
+
+        __builtin_unreachable();
     }
 };
 } //namespace lox
