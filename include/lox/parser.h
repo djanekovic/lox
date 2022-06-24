@@ -10,6 +10,12 @@
 
 namespace lox {
 class Parser {
+public:
+    explicit Parser(std::vector<Token>&& tokens):
+        tokens_{std::move(tokens)} {}
+
+    std::vector<std::unique_ptr<Stmt>> parse();
+private:
     struct ParseError: public std::runtime_error {
         ParseError(): std::runtime_error("") {}
     };
@@ -56,10 +62,5 @@ class Parser {
 
     bool match(std::initializer_list<TokenType> tokens);
 
-public:
-    explicit Parser(std::vector<Token>&& tokens):
-        tokens_{std::move(tokens)} {}
-
-    std::vector<std::unique_ptr<Stmt>> parse();
 };
 } //namespace lox

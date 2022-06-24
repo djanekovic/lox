@@ -19,7 +19,7 @@ std::vector<Token> Scanner::scan_tokens()
         }
     }
 
-    tokens_.emplace_back(TokenType::END, line_);
+    tokens_.emplace_back(TokenType::END, std::monostate(), line_);
     return tokens_;
 }
 

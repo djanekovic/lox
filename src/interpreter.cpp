@@ -132,7 +132,7 @@ void Interpreter::visit_expression_stmt(const ExpressionStmt& stmt) {
 
 void Interpreter::visit_print_stmt(const PrintStmt& stmt) {
     evaluate(*stmt.expression_);
-    fmt::print("{}\n", std::visit(Token::PrinterVisitor(), value_));
+    fmt::print("{}\n", std::visit(PrinterVisitor(), value_));
 }
 
 void Interpreter::visit_return_stmt(const ReturnStmt& stmt) {
@@ -220,7 +220,7 @@ void Interpreter::visit_grouping_node(const GroupingExpr& expr) {
 }
 
 std::string Interpreter::stringify_value() const {
-    return std::visit(Token::PrinterVisitor(), value_);
+    return std::visit(PrinterVisitor(), value_);
 }
 
 void Interpreter::visit_unary_node(const UnaryExpr& expr) {

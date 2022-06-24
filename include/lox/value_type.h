@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cassert>
 #include <memory>
 #include <vector>
 #include <variant>
@@ -15,6 +16,14 @@ using CallablePtr = std::shared_ptr<Callable>;
 //using InstancePtr = std::shared_ptr<Instance>;
 using ValueType = std::variant<std::monostate, double, std::string, bool, CallablePtr>;
 
+
+struct PrinterVisitor {
+    std::string operator()(std::monostate value) { return "nil"; }
+    std::string operator()(const std::string& value) { return value; }
+    std::string operator()(double value) { return std::to_string(value); }
+    std::string operator()(bool value) { return value ? "true" : "false"; }
+    std::string operator()(CallablePtr value) { assert(false); }
+};
 
 class Interpreter;
 struct Callable {
