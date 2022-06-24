@@ -84,6 +84,9 @@ std::unique_ptr<ClassStmt> Parser::class_declaration() {
  * parameters -> IDENTIFIER ( "," IDENTIFIER )* ;
  */
 std::unique_ptr<FunctionStmt> Parser::function_declaration(std::string_view kind) {
+    //TODO: we don't need string_view here, we can have enum -> string_view mapping internally
+    //and outside just enum
+
     // parse function name
     Token name = consume(TokenType::IDENTIFIER, fmt::format("Expect {} name", kind));
 
@@ -288,6 +291,7 @@ std::unique_ptr<Expr> Parser::assignment() {
     auto expr = logical_or();
     if (match({TokenType::EQUAL})) {
         auto equals = previous();
+        // This function is recursive!
         auto value = assignment();
 
         if (auto *upcast_expr = dynamic_cast<VariableExpr *>(expr.get())) {
