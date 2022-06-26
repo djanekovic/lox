@@ -56,7 +56,7 @@ class Interpreter: public ExprVisitor, public StmtVisitor {
 
     void evaluate(const Expr& expression);
     void visit_block_stmt(const BlockStmt& stmt) override;
-    void visit_class_stmt(const ClassStmt& stmt) override {}
+    void visit_class_stmt(const ClassStmt& stmt) override;
     void visit_function_expression_stmt(const FunctionStmt& stmt) override;
     void visit_expression_stmt(const ExpressionStmt& stmt) override;
     void visit_if_expression_stmt(const IfExpressionStmt& stmt) override;

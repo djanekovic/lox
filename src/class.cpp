@@ -1,8 +1,5 @@
-#include "lox/class.h"
-#include "lox/instance.h"
+#include <lox/class.h>
 
-using namespace lox;
-
-ValueType Class::operator()(Interpreter& interpreter, std::vector<ValueType>& arguments) const {
-    Instance instance;
+std::string lox::Class::ToString() const {
+    return fmt::format("{} class", name_);
 }

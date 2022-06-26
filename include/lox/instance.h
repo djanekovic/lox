@@ -1,17 +1,18 @@
 #pragma once
-
-#include "class.h"
+#include <memory>
+#include <string>
 
 namespace lox {
-class Instance {
-  private:
-    Class class_;
-  public:
-    Instance(Class& lox_class):
-        class_{std::move(lox_class)} {}
+class Class;
 
-    std::string ToString() const {
-        return fmt::format("{} instance", class_.ToString());
-    }
+class Instance {
+  public:
+    Instance(std::shared_ptr<Class> lox_class):
+        class_{lox_class} {}
+
+    std::string ToString() const;
+
+  private:
+    std::shared_ptr<Class> class_;
 };
 }

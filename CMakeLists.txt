@@ -12,7 +12,9 @@ add_library(lox_lib
     src/interpreter.cpp
     src/environment.cpp
     src/native/clock_callable.cpp
-    src/resolver.cpp)
+    src/resolver.cpp
+    src/class.cpp
+    src/instance.cpp)
 
 target_compile_options(lox_lib PUBLIC -Wall -ggdb)
 include_directories(lox_lib PUBLIC include)

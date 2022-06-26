@@ -68,6 +68,19 @@ struct PlusVisitor {
 };
 
 
+
+struct PrinterVisitor {
+    std::string operator()(std::monostate value) { return "nil"; }
+    std::string operator()(const std::string& value) { return value; }
+    std::string operator()(double value) { return std::to_string(value); }
+    std::string operator()(bool value) { return value ? "true" : "false"; }
+    std::string operator()(CallablePtr value) { assert(false); }
+    std::string operator()(InstancePtr value) { return value->ToString(); }
+    std::string operator()(ClassPtr value) { return value->ToString(); }
+};
+
+
+
 Interpreter::Interpreter():
     environment_{std::make_shared<Environment>()},
     globals_{environment_.get()} {
@@ -118,14 +131,12 @@ void Interpreter::visit_block_stmt(const BlockStmt& stmt) {
     execute_block(stmt.statements_, std::make_shared<Environment>(environment_));
 }
 
-#if 0
 void Interpreter::visit_class_stmt(const ClassStmt& stmt) {
     const auto class_name = std::get<std::string>(stmt.name_.lexeme_);
     environment_->define(class_name, std::monostate());
     auto lox_class = std::make_shared<Class>(class_name);
-    environment_->assign(class_name, lox_class);
+    environment_->assign(stmt.name_, lox_class);
 }
-#endif
 void Interpreter::visit_expression_stmt(const ExpressionStmt& stmt) {
     evaluate(*stmt.expression_);
 }
@@ -297,7 +308,7 @@ void Interpreter::visit_binary_node(const BinaryExpr& expr) {
 
 void Interpreter::visit_call_expr(const CallExpr& node) {
     evaluate(*node.callee_);
-    const auto callee = value_;
+    auto callee = value_;
 
     std::vector<ValueType> arguments;
     arguments.reserve(node.arguments_.size());
@@ -306,8 +317,13 @@ void Interpreter::visit_call_expr(const CallExpr& node) {
         arguments.push_back(value_);
     }
 
-    if (!std::holds_alternative<CallablePtr>(callee)) {
+    if (!std::holds_alternative<CallablePtr>(callee) and !std::holds_alternative<ClassPtr>(callee)) {
         throw Lox::RuntimeError(node.paren_, "Can only call functions and classes");
+    }
+
+    if (std::holds_alternative<ClassPtr>(callee)) {
+        value_ = std::make_shared<Instance>(std::get<ClassPtr>(callee));
+        return;
     }
 
     const auto& function = *std::get<CallablePtr>(callee);
