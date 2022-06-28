@@ -12,6 +12,7 @@
 #include "lox/expr/grouping_expr.h"
 #include "lox/expr/call_expr.h"
 #include "lox/expr/get_expr.h"
+#include "lox/expr/set_expr.h"
 #include "lox/expr/unary_expr.h"
 #include "lox/expr/binary_expr.h"
 
@@ -296,6 +297,8 @@ std::unique_ptr<Expr> Parser::assignment() {
 
         if (auto *upcast_expr = dynamic_cast<VariableExpr *>(expr.get())) {
             return std::make_unique<AssignExpr>(std::move(upcast_expr->name_), std::move(value));
+        } else if (auto *upcast_expr = dynamic_cast<GetExpr *>(expr.get())) {
+            return std::make_unique<SetExpr>(upcast_expr->name_, std::move(upcast_expr->object_), std::move(value));
         }
 
         Lox::error(std::move(equals), "Invalid assignment target.");

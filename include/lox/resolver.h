@@ -10,17 +10,18 @@
 
 namespace lox {
 class Resolver: public ExprVisitor, public StmtVisitor {
-private:
-    enum FunctionType { NONE, FUNCTION };
-    Interpreter &interpreter_;
-    std::vector<std::map<std::string, bool>> scopes_;
-    FunctionType current_function_{FunctionType::NONE};
 public:
     explicit Resolver(Interpreter& interpreter):
         interpreter_{interpreter} {}
 
     void resolve(const std::vector<std::unique_ptr<Stmt>>& statements);
+
 private:
+    enum class FunctionType { NONE, FUNCTION, METHOD };
+    Interpreter &interpreter_;
+    std::vector<std::map<std::string, bool>> scopes_;
+    FunctionType current_function_{FunctionType::NONE};
+
     void visit_assign_node(const AssignExpr& node) override;
     void visit_literal_node(const LiteralExpr& node) override {}
     void visit_logical_node(const LogicalExpr& node) override;
@@ -30,6 +31,7 @@ private:
     void visit_variable_expr(const VariableExpr& node) override;
     void visit_call_expr(const CallExpr& node) override;
     void visit_get_expr(const GetExpr& node) override;
+    void visit_set_node(const SetExpr& node) override;
     void visit_block_stmt(const BlockStmt& stmt) override;
 
     void visit_class_stmt(const ClassStmt& stmt) override;

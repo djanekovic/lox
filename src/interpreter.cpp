@@ -14,6 +14,7 @@
 #include "lox/expr/grouping_expr.h"
 #include "lox/expr/call_expr.h"
 #include "lox/expr/get_expr.h"
+#include "lox/expr/set_expr.h"
 #include "lox/expr/unary_expr.h"
 #include "lox/expr/binary_expr.h"
 
@@ -134,7 +135,14 @@ void Interpreter::visit_block_stmt(const BlockStmt& stmt) {
 void Interpreter::visit_class_stmt(const ClassStmt& stmt) {
     const auto class_name = std::get<std::string>(stmt.name_.lexeme_);
     environment_->define(class_name, std::monostate());
-    auto lox_class = std::make_shared<Class>(class_name);
+
+    std::map<std::string, Function> methods;
+    for(const auto& method : stmt.methods_) {
+        const auto& method_name = std::get<std::string>(method->name_.lexeme_);
+        methods.emplace(method_name, Function(*method, environment_));
+    }
+
+    auto lox_class = std::make_shared<Class>(class_name, methods);
     environment_->assign(stmt.name_, lox_class);
 }
 void Interpreter::visit_expression_stmt(const ExpressionStmt& stmt) {
@@ -335,14 +343,34 @@ void Interpreter::visit_call_expr(const CallExpr& node) {
     value_ = function(*this, arguments);
 }
 
-#if 0
+void Interpreter::visit_set_node(const SetExpr& node) {
+    evaluate(*node.object_);
+    auto object = value_;
+
+    if (!std::holds_alternative<InstancePtr>(object)) {
+        throw Lox::RuntimeError(node.name_, "Only instances have fields");
+    }
+
+    evaluate(*node.value_);
+    const auto& token_name = std::get<std::string>(node.name_.lexeme_);
+    std::get<InstancePtr>(object)->Set(token_name, value_);
+}
+
 void Interpreter::visit_get_expr(const GetExpr& node) {
     evaluate(*node.object_);
-    if (std::holds_alternative<InstancePtr>(value_)) {
-        return std::get<InstancePtr>(value_)->get(std::get<std::string>(node.name_.lexeme_));
+
+    if (!std::holds_alternative<InstancePtr>(value_)) {
+        throw Lox::RuntimeError(node.name_, "Only instances have properties");
     }
+
+    const std::string& property_name = std::get<std::string>(node.name_.lexeme_);
+    if (const auto v = std::get<InstancePtr>(value_)->Get(property_name)) {
+        value_ = *v;
+        return;
+    }
+
+    throw Lox::RuntimeError(node.name_, fmt::format("Undefined property {}", property_name));
 }
-#endif
 
 void Interpreter::visit_variable_expr(const VariableExpr& node) {
     value_ = lookup_variable(node);

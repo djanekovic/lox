@@ -8,6 +8,7 @@
 #include "lox/expr/grouping_expr.h"
 #include "lox/expr/call_expr.h"
 #include "lox/expr/get_expr.h"
+#include "lox/expr/set_expr.h"
 #include "lox/expr/unary_expr.h"
 #include "lox/expr/binary_expr.h"
 
@@ -70,6 +71,12 @@ void Resolver::visit_get_expr(const GetExpr& node) {
     resolve(*node.object_);
 }
 
+
+void Resolver::visit_set_node(const SetExpr& node) {
+    resolve(*node.value_);
+    resolve(*node.object_);
+}
+
 void Resolver::visit_block_stmt(const BlockStmt& stmt) {
     begin_scope();
     resolve(stmt.statements_);
@@ -98,6 +105,10 @@ void Resolver::visit_if_expression_stmt(const IfExpressionStmt& stmt) {
 void Resolver::visit_class_stmt(const ClassStmt& stmt) {
     declare(stmt.name_);
     define(stmt.name_);
+
+    for (const auto& method : stmt.methods_) {
+        resolve_function(*method, FunctionType::METHOD);
+    }
 }
 
 void Resolver::visit_print_stmt(const PrintStmt& stmt) {

@@ -14,6 +14,7 @@ struct AssignExpr;
 struct BinaryExpr;
 struct CallExpr;
 struct GetExpr;
+struct SetExpr;
 struct GroupingExpr;
 struct LiteralExpr;
 struct LogicalExpr;
@@ -26,6 +27,7 @@ struct ExprVisitor {
     virtual void visit_binary_node(const BinaryExpr& node) = 0;
     virtual void visit_call_expr(const CallExpr& node) = 0;
     virtual void visit_get_expr(const GetExpr& node) = 0;
+    virtual void visit_set_node(const SetExpr& node) = 0;
     virtual void visit_grouping_node(const GroupingExpr& node) = 0;
     virtual void visit_literal_node(const LiteralExpr& node) = 0;
     virtual void visit_logical_node(const LogicalExpr& node) = 0;

@@ -52,7 +52,8 @@ class Interpreter: public ExprVisitor, public StmtVisitor {
     void visit_grouping_node(const GroupingExpr& node) override;
     void visit_variable_expr(const VariableExpr& node) override;
     void visit_call_expr(const CallExpr& node) override;
-    void visit_get_expr(const GetExpr& node) override {}
+    void visit_get_expr(const GetExpr& node) override;
+    void visit_set_node(const SetExpr& node) override;
 
     void evaluate(const Expr& expression);
     void visit_block_stmt(const BlockStmt& stmt) override;
