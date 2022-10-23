@@ -2,6 +2,7 @@
 
 extern "C" {
 #include "clox/chunk.h"
+#include "clox/debug.h"
 }
 
 TEST(TestChunk, BasicTestChunk) {
