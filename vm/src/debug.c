@@ -36,6 +36,8 @@ size_t disassemble_instruction(Chunk *chunk, size_t offset) {
   switch(instr) {
     case OP_CONSTANT:
       return constant_instruction("OP_CONSTANT", chunk, offset);
+    case OP_NEGATE:
+      return simple_instruction("OP_NEGATE", offset);
     case OP_RETURN:
       return simple_instruction("OP_RETURN", offset);
      default:
