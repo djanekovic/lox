@@ -15,8 +15,8 @@ enable_testing()
 add_executable(test_chunk test_chunk.cpp)
 target_link_libraries(test_chunk GTest::gtest_main clox_lib)
 
-add_executable(test_vm test_vm.cpp)
-target_link_libraries(test_vm GTest::gtest_main clox_lib)
+add_executable(test_scanner test_scanner.cpp)
+target_link_libraries(test_scanner GTest::gtest_main clox_lib)
 
 include(GoogleTest)
 gtest_discover_tests(test_chunk)
