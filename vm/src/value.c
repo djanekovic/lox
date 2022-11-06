@@ -10,7 +10,7 @@ void init_value_array(ValueArray *value_array) {
   value_array->values = NULL;
 }
 
-bool write_value_array(ValueArray *value_array, double value) {
+bool write_value_array(ValueArray *value_array, Value value) {
   if (value_array->capacity < value_array->count + 1) {
     size_t old_capacity = value_array->capacity;
     value_array->capacity = grow_capacity(old_capacity);
@@ -32,5 +32,5 @@ void free_value_array(ValueArray *value_array) {
 }
 
 void print_value(Value value) {
-  fprintf(stdout, "%g", value);
+  fprintf(stdout, "%g", AS_NUMBER(value));
 }

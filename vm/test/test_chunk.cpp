@@ -30,7 +30,11 @@ TEST(TestChunk, GrowTestChunk) {
 TEST(TestChunk, BasicConstantTest) {
   Chunk chunk;
   init_chunk(&chunk);
-  size_t constant = add_constant(&chunk, 1.2);
+  Value v;
+  v.as.number = 1.2;
+  v.type = VAL_NUMBER;
+
+  size_t constant = add_constant(&chunk, v);
   write_chunk(&chunk, OP_CONSTANT, 123);
   write_chunk(&chunk, constant, 123);
 
@@ -38,7 +42,7 @@ TEST(TestChunk, BasicConstantTest) {
 
   EXPECT_EQ(chunk.code[0], OP_CONSTANT);
   EXPECT_EQ(chunk.code[1], 0);
-  EXPECT_DOUBLE_EQ(chunk.constants.values[0], 1.2);
+  EXPECT_DOUBLE_EQ(AS_NUMBER(chunk.constants.values[0]), 1.2);
 
   EXPECT_EQ(chunk.code[2], OP_RETURN);
 }
