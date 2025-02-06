@@ -1,35 +1,33 @@
 #include <iostream>
+#include <algorithm>
 #include <memory>
 #include <fmt/core.h>
 
 #include "lox/scanner.h"
-#include "lox/parser.h"
-#include "lox/resolver.h"
-#include "lox/ast_pretty_printer.h"
-#include "lox/interpreter.h"
+// #include "lox/parser.h"
+// #include "lox/resolver.h"
+// #include "lox/ast_pretty_printer.h"
+// #include "lox/interpreter.h"
 #include "lox/lox.h"
 
-namespace {
-// we want to reuse this object
-static lox::Interpreter interpreter;
-} // anonymous namespace
+// namespace {
+// // we want to reuse this object
+// static lox::Interpreter interpreter;
+// } // anonymous namespace
 
 void run(std::string&& command)
 {
-    lox::Scanner scanner(std::move(command));
+    auto tokens = lox::scan_tokens(std::move(command));
+    std::for_each(tokens.cbegin(), tokens.cend(), [](const auto& t) { fmt::print("{}\n", t.to_string()); });
 
-    auto tokens = scanner.scan_tokens();
-    //std::for_each(tokens.cbegin(), tokens.cend(), [](const auto& t) { fmt::print("{}\n", t.stringify_token()); });
-
-    lox::Parser parser(std::move(tokens));
-    auto statements = parser.parse();
+    // lox::Parser parser(std::move(tokens));
+    // auto statements = parser.parse();
 
 #if 0
     lox::ASTPrettyPrinter printer;
     expression->accept(printer);
 
     fmt::print("{}\n", printer.to_string());
-#endif
 
     lox::Resolver resolver(interpreter);
     resolver.resolve(statements);
@@ -40,6 +38,7 @@ void run(std::string&& command)
 
 
     interpreter.interpret(std::move(statements));
+#endif
 }
 
 

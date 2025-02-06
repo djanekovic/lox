@@ -1,10 +1,10 @@
 #pragma once
 
-#include <cassert>
+#include <any>
 #include <string>
 #include <fmt/core.h>
 
-#include "value_type.h"
+//#include "value_type.h"
 
 namespace lox {
 enum class TokenType: std::int8_t {
@@ -82,11 +82,10 @@ inline std::string_view get_token_type_string(const TokenType type) {
 struct Token {
     Token() = default;
 
-    Token(TokenType type, std::size_t line): Token(type, std::monostate(), line) {}
+    Token(TokenType type, std::size_t line): type_{type}, lexeme_{}, line_{line} {}
 
-    template<typename LexemeType>
-    Token(TokenType type, LexemeType lexeme, std::size_t line):
-        type_{type}, lexeme_(std::forward<LexemeType>(lexeme)), line_{line} {}
+    Token(TokenType type,std::any&& lexeme, std::size_t line):
+        type_{type}, lexeme_(std::move(lexeme)), line_{line} {}
 
     std::string to_string() const {
         return fmt::format("[{} {} {}]", get_token_type_string(type_), get_lexeme_from_token(), line_);
@@ -117,9 +116,9 @@ struct Token {
             case TokenType::GREATER_EQUAL:  return ">=";
             case TokenType::LESS_EQUAL:     return "<=";
 
-            case TokenType::IDENTIFIER:     return std::get<std::string>(lexeme_);
-            case TokenType::STRING:         return fmt::format("\"{}\"", std::get<std::string>(lexeme_));
-            case TokenType::NUMBER:         return std::to_string(std::get<double>(lexeme_));
+            case TokenType::IDENTIFIER:     return std::any_cast<std::string>(lexeme_);
+            case TokenType::STRING:         return fmt::format("\"{}\"", std::any_cast<std::string>(lexeme_));
+            case TokenType::NUMBER:         return std::to_string(std::any_cast<double>(lexeme_));
 
             case TokenType::AND:            return "and";
             case TokenType::CLASS:          return "class";
@@ -145,12 +144,7 @@ struct Token {
     }
 
     TokenType type_;
-    ValueType lexeme_;
+    std::any lexeme_;
     std::size_t line_;
 };
-
-inline bool operator==(const Token& lhs, const Token& rhs) {
-    return rhs.type_ == lhs.type_ && rhs.lexeme_ == lhs.lexeme_ && rhs.line_ == lhs.line_;
-}
-
 } //namespace lox

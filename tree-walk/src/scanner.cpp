@@ -1,32 +1,83 @@
 #include <cctype>
-#include <variant>
+#include <cstddef>
 #include <vector>
+#include <map>
+#include <optional>
 
 #include "lox/scanner.h"
 #include "lox/lox.h"
 
 using namespace lox;
+namespace {
+struct Scanner {
+    explicit Scanner(std::string&& program): program_{std::move(program)} {}
 
-Scanner::Scanner(std::string&& program):
-    program_{std::move(program)} {}
+    std::size_t start_ = 0;
+    std::size_t current_ = 0;
+    std::size_t line_ = 1;
 
-std::vector<Token> Scanner::scan_tokens()
-{
-    while(!is_end()) {
-        start_ = current_;
-        if (auto token = scan_token()) {
-            tokens_.push_back(std::move(*token));
-        }
+    std::string program_;
+    std::map<std::string, TokenType> keywords_{
+      {"and", TokenType::AND},
+      {"class", TokenType::CLASS},
+      {"else", TokenType::ELSE},
+      {"false", TokenType::FALSE},
+      {"for", TokenType::FOR},
+      {"fun", TokenType::FUN},
+      {"if", TokenType::IF},
+      {"nil", TokenType::NIL},
+      {"or", TokenType::OR},
+      {"print", TokenType::PRINT},
+      {"return", TokenType::RETURN},
+      {"super", TokenType::SUPER},
+      {"this", TokenType::THIS},
+      {"true", TokenType::TRUE},
+      {"var", TokenType::VAR},
+      {"while", TokenType::WHILE}};
+
+    bool is_end() const {
+        return current_ >= program_.size();
     }
 
-    tokens_.emplace_back(TokenType::END, std::monostate(), line_);
-    return tokens_;
-}
+    bool match(const char c) {
+        if (is_end()) {
+            return false;
+        }
 
-Token Scanner::get_current_line_token(const TokenType type) const
+        if (program_[current_] != c) {
+            return false;
+        }
+
+        current_++;
+        return true;
+    }
+
+    char advance() {
+        return program_[current_++];
+    }
+
+    char peek(std::size_t look_ahead) const {
+        return (current_ + look_ahead) >= program_.size() ? '\0' : program_.at(current_ + look_ahead);
+    }
+
+    std::optional<Token> scan_token();
+
+    // Call this function for tokens that have lexemes we need to remember
+    // IDENTIFIER, STRING and NUMBER
+    Token get_current_line_token(TokenType type, std::any&& lexeme) const {
+        return Token{type, std::move(lexeme), line_};
+    }
+
+    std::optional<Token> string();
+    Token number();
+    Token identifier();
+    Token get_current_line_token(TokenType type) const;
+};
+
+Token Scanner::get_current_line_token(TokenType type) const
 {
     // These are the only tokens that need lexemes
-    if (type == TokenType::IDENTIFIER or type == TokenType::STRING or type == TokenType::NUMBER) {
+    if (type == TokenType::IDENTIFIER || type == TokenType::STRING || type == TokenType::NUMBER) {
         std::string lexeme = program_.substr(start_, current_-start_);
         if (type == TokenType::NUMBER) {
             return get_current_line_token(type, std::stod(lexeme));
@@ -38,19 +89,7 @@ Token Scanner::get_current_line_token(const TokenType type) const
     }
 
     // we don't need lexeme so just pass std::monostate as nothing
-    return get_current_line_token(type, std::monostate());
-}
-
-
-template<typename LexemeType>
-Token Scanner::get_current_line_token(const TokenType type, LexemeType&& lexeme) const
-{
-    return Token{type, std::forward<LexemeType>(lexeme), line_};
-}
-
-char Scanner::advance()
-{
-    return program_.at(current_++);
+    return get_current_line_token(type, std::any());
 }
 
 std::optional<Token> Scanner::scan_token()
@@ -152,25 +191,22 @@ std::optional<Token> Scanner::string()
     advance();
     return get_current_line_token(TokenType::STRING);
 }
+} //anonymous namespace
 
-char Scanner::peek(std::size_t look_ahead) const {
-    return (current_ + look_ahead) >= program_.size() ? '\0' : program_.at(current_ + look_ahead);
-}
+namespace lox {
+std::vector<Token> scan_tokens(std::string&& program)
+{
+    Scanner scanner(std::move(program));
 
-bool Scanner::match(const char c) {
-    if (is_end()) {
-        return false;
+    std::vector<Token> tokens;
+    while(!scanner.is_end()) {
+        scanner.start_ = scanner.current_;
+        if (auto token = scanner.scan_token()) {
+            tokens.push_back(std::move(*token));
+        }
     }
 
-    if (program_.at(current_) != c) {
-        return false;
-    }
-
-    current_++;
-    return true;
+    tokens.emplace_back(TokenType::END, scanner.line_);
+    return tokens;
 }
-
-bool Scanner::is_end() const {
-    return current_ >= program_.size();
 }
-

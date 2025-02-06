@@ -8,13 +8,14 @@ add_subdirectory(extern/fmt)
 
 add_library(lox_lib
     src/scanner.cpp
-    src/parser.cpp
-    src/interpreter.cpp
-    src/environment.cpp
-    src/native/clock_callable.cpp
-    src/resolver.cpp
-    src/class.cpp
-    src/instance.cpp)
+    # src/parser.cpp
+    # src/interpreter.cpp
+    # src/environment.cpp
+    # src/native/clock_callable.cpp
+    # src/resolver.cpp
+    # src/class.cpp
+    # src/instance.cpp
+)
 
 target_compile_options(lox_lib PUBLIC -Wall -ggdb)
 include_directories(lox_lib PUBLIC include)
@@ -25,4 +26,3 @@ add_executable(lox src/main.cpp)
 target_link_libraries(lox lox_lib)
 
 add_subdirectory(tests)
-

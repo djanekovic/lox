@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <optional>
 #include <lox/function.h>
 #include "interpreter.h"
 
