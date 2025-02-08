@@ -3,7 +3,6 @@
 #include <optional>
 #include <string>
 #include <lox/function.h>
-#include "interpreter.h"
 
 namespace lox {
 class Class final {

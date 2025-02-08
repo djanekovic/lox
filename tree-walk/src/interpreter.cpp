@@ -1,5 +1,4 @@
 #include <cassert>
-#include <type_traits>
 #include <variant>
 
 #include "lox/function.h"
@@ -42,13 +41,9 @@ struct EqualsVisitor {
     // if the types are different just return false
     template<typename LhsType, typename RhsType>
     bool operator()(LhsType&& lhs, RhsType&& rhs) { return false; }
-
     bool operator()(std::monostate lhs, std::monostate rhs) { return true; }
-
     bool operator()(double lhs, double rhs) { return lhs == rhs; }
-
     bool operator()(bool lhs, bool rhs) { return lhs == rhs; }
-
     bool operator()(const std::string& lhs, const std::string& rhs) { return lhs == rhs; }
 };
 
@@ -64,10 +59,8 @@ struct PlusVisitor {
     }
 
     ValueType operator()(const std::string& lhs, const std::string& rhs) { return lhs + rhs; }
-
     ValueType operator()(double lhs, double rhs) { return lhs + rhs; }
 };
-
 
 
 struct PrinterVisitor {
@@ -79,7 +72,6 @@ struct PrinterVisitor {
     std::string operator()(InstancePtr value) { return value->ToString(); }
     std::string operator()(ClassPtr value) { return value->ToString(); }
 };
-
 
 
 Interpreter::Interpreter():

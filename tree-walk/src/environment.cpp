@@ -1,3 +1,4 @@
+#include <cassert>
 #include "lox/environment.h"
 
 using namespace lox;
@@ -7,7 +8,7 @@ void Environment::define(const std::string& name, ValueType value) {
 
 const Environment* Environment::ancestor(std::size_t distance) const {
     const Environment *env = this;
-    for (int i = 0; i < distance; i++) {
+    for (auto i = 0U; i < distance; i++) {
         env = env->enclosing_.get();
     }
 

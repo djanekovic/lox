@@ -1,6 +1,5 @@
 #pragma once
 
-#include <cassert>
 #include <string>
 #include <fmt/core.h>
 

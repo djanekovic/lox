@@ -18,7 +18,7 @@ struct Lox {
     inline static bool had_error = false;
     inline static bool had_runtime_error = false;
 
-    static void error(Token token, std::string message) {
+    static void error(const Token& token, const std::string& message) {
         if (token.type_ == TokenType::END) {
             report(token.line_, " at end", message);
         } else {

@@ -15,7 +15,7 @@ public:
 
     ValueType operator()(Interpreter& interpreter, std::vector<ValueType>& arguments) const override {
         auto env = std::make_shared<Environment>(closure_);
-        for (int i = 0; i < declaration_.params_.size(); i++) {
+        for (auto i = 0U; i < declaration_.params_.size(); i++) {
             env->define(std::get<std::string>(declaration_.params_.at(i).lexeme_), arguments.at(i));
         }
 

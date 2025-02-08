@@ -1,11 +1,9 @@
 #pragma once
 
 #include <map>
-#include <functional>
 #include <memory>
 #include <vector>
 #include <string>
-#include <stdexcept>
 
 #include "lox.h"
 #include "expr/expr.h"

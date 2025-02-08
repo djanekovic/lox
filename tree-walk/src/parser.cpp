@@ -1,7 +1,6 @@
-#include <cassert>
 #include <memory>
-#include <numeric>
-#include <functional>
+#include <algorithm>
+#include <string_view>
 
 #include "lox/lox.h"
 
@@ -30,15 +29,73 @@
 
 using namespace lox;
 
-std::vector<std::unique_ptr<Stmt>> Parser::parse()
-{
-    std::vector<std::unique_ptr<Stmt>> statements;
-    while(!is_end()) {
-        statements.emplace_back(declaration());
+namespace {
+struct ParseError: public std::runtime_error {
+    ParseError(): std::runtime_error("") {}
+};
+
+struct Parser {
+    explicit Parser(std::vector<Token>&& tokens): tokens_{std::move(tokens)} {}
+
+    std::unique_ptr<Stmt> declaration();
+    std::unique_ptr<ClassStmt> class_declaration();
+    std::unique_ptr<VarStmt> variable_declaration();
+    std::unique_ptr<FunctionStmt> function_declaration(std::string_view kind);
+
+    std::unique_ptr<Stmt> statement();
+    std::unique_ptr<PrintStmt> print_statement();
+    std::unique_ptr<ReturnStmt> return_statement();
+    std::unique_ptr<IfExpressionStmt> if_statement();
+    std::unique_ptr<Stmt> while_statement();
+    std::unique_ptr<Stmt> for_statement();
+    std::unique_ptr<ExpressionStmt> expression_statement();
+    std::vector<std::unique_ptr<Stmt>> block();
+
+    std::unique_ptr<Expr> expression();
+    std::unique_ptr<Expr> assignment();
+    std::unique_ptr<Expr> logical_or();
+    std::unique_ptr<Expr> logical_and();
+    std::unique_ptr<Expr> equality();
+    std::unique_ptr<Expr> comparison();
+    std::unique_ptr<Expr> term();
+    std::unique_ptr<Expr> factor();
+    std::unique_ptr<Expr> unary();
+    std::unique_ptr<Expr> call();
+    std::unique_ptr<CallExpr> finish_call(std::unique_ptr<Expr> expr);
+    std::unique_ptr<Expr> primary();
+
+    bool match(std::initializer_list<TokenType> tokens);
+
+    bool is_end() const {
+        return peek().type_ == TokenType::END;
     }
 
-    return statements;
-}
+    Token peek() const {
+        return tokens_.at(current);
+    }
+
+    Token previous() const {
+        return tokens_.at(current-1);
+    }
+
+    Token advance() {
+        if (!is_end()) {
+            current++;
+        }
+        return previous();
+    }
+
+    bool check(const TokenType type) const {
+        return is_end() ? false : peek().type_ == type;
+    }
+
+    ParseError error(const Token& token, const std::string& message);
+    Token consume(TokenType type, const std::string& message);
+    void synchronize();
+    
+    std::vector<Token> tokens_;
+    std::size_t current = 0;
+};
 
 /**
  * declaration -> classDecl
@@ -492,43 +549,13 @@ std::unique_ptr<Expr> Parser::primary()
     throw error(peek(), "Expect expression");
 }
 
-bool Parser::is_end() const
+ParseError Parser::error(const Token& token, const std::string& message)
 {
-    return peek().type_ == TokenType::END;
-}
-
-Token Parser::peek() const
-{
-    return tokens_.at(current);
-}
-
-Token Parser::previous() const
-{
-    return tokens_.at(current-1);
-}
-
-Token Parser::advance()
-{
-    if (!is_end()) {
-        current++;
-    }
-
-    return previous();
-}
-
-bool Parser::check(const TokenType type) const
-{
-    return is_end() ? false : peek().type_ == type;
-}
-
-
-Parser::ParseError Parser::error(Token token, std::string message)
-{
-    Lox::error(peek(), message);
+    Lox::error(token, message);
     return ParseError();
 }
 
-Token Parser::consume(TokenType type, std::string message)
+Token Parser::consume(TokenType type, const std::string& message)
 {
     if (check(type)) {
         return advance();
@@ -568,4 +595,17 @@ bool Parser::match(std::initializer_list<TokenType> tokens)
     }
 
     return false;
+}
+} //anonymous namespace
+
+namespace lox {
+std::vector<std::unique_ptr<Stmt>> parse(std::vector<Token>&& tokens) {
+    Parser parser(std::move(tokens));
+    std::vector<std::unique_ptr<Stmt>> statements;
+    while(!parser.is_end()) {
+        statements.emplace_back(parser.declaration());
+    }
+
+    return statements;
+}
 }
