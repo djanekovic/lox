@@ -1,27 +1,78 @@
 #include <cctype>
 #include <variant>
 #include <vector>
+#include <optional>
+#include <unordered_map>
 
 #include "lox/scanner.h"
 #include "lox/lox.h"
 
 using namespace lox;
 
-Scanner::Scanner(std::string&& program):
-    program_{std::move(program)} {}
+namespace lox {
+struct Scanner {
+    explicit Scanner(std::string&& program): program_{std::move(program)} {};
 
-std::vector<Token> Scanner::scan_tokens()
-{
-    while(!is_end()) {
-        start_ = current_;
-        if (auto token = scan_token()) {
-            tokens_.push_back(std::move(*token));
-        }
+    std::optional<Token> scan_token();
+    Token get_current_line_token(const TokenType type) const;
+    // Call this function for tokens that have lexemes we need to remember
+    // IDENTIFIER, STRING and NUMBER
+    template<typename LexemeType>
+    Token get_current_line_token(const TokenType type, LexemeType&& lexeme) const {
+        return Token{type, std::forward<LexemeType>(lexeme), line_};
+    }
+    std::optional<Token> string();
+    Token number();
+    Token identifier();
+
+    char advance() {
+        return program_.at(current_++);
     }
 
-    tokens_.emplace_back(TokenType::END, std::monostate(), line_);
-    return tokens_;
-}
+    char peek(std::size_t look_ahead) const {
+        return (current_ + look_ahead) >= program_.size() ? '\0' : program_.at(current_ + look_ahead);
+    }
+
+    bool match(const char c) {
+        if (is_end()) {
+            return false;
+        }
+        if (program_.at(current_) != c) {
+            return false;
+        }
+        current_++;
+        return true;
+    }
+
+    bool is_end() const {
+        return current_ >= program_.size();
+    }
+
+    std::string program_;
+
+    std::size_t start_ = 0;
+    std::size_t current_ = 0;
+    std::size_t line_ = 1;
+
+    std::unordered_map<std::string, TokenType> keywords_{
+      {"and", TokenType::AND},
+      {"class", TokenType::CLASS},
+      {"else", TokenType::ELSE},
+      {"false", TokenType::FALSE},
+      {"for", TokenType::FOR},
+      {"fun", TokenType::FUN},
+      {"if", TokenType::IF},
+      {"nil", TokenType::NIL},
+      {"or", TokenType::OR},
+      {"print", TokenType::PRINT},
+      {"return", TokenType::RETURN},
+      {"super", TokenType::SUPER},
+      {"this", TokenType::THIS},
+      {"true", TokenType::TRUE},
+      {"var", TokenType::VAR},
+      {"while", TokenType::WHILE}
+    };
+};
 
 Token Scanner::get_current_line_token(const TokenType type) const
 {
@@ -39,18 +90,6 @@ Token Scanner::get_current_line_token(const TokenType type) const
 
     // we don't need lexeme so just pass std::monostate as nothing
     return get_current_line_token(type, std::monostate());
-}
-
-
-template<typename LexemeType>
-Token Scanner::get_current_line_token(const TokenType type, LexemeType&& lexeme) const
-{
-    return Token{type, std::forward<LexemeType>(lexeme), line_};
-}
-
-char Scanner::advance()
-{
-    return program_.at(current_++);
 }
 
 std::optional<Token> Scanner::scan_token()
@@ -152,25 +191,20 @@ std::optional<Token> Scanner::string()
     advance();
     return get_current_line_token(TokenType::STRING);
 }
+} //anonymous namespace
 
-char Scanner::peek(std::size_t look_ahead) const {
-    return (current_ + look_ahead) >= program_.size() ? '\0' : program_.at(current_ + look_ahead);
-}
-
-bool Scanner::match(const char c) {
-    if (is_end()) {
-        return false;
+namespace lox {
+std::vector<Token> scan_tokens(std::string&& program) {
+    Scanner scanner(std::move(program));
+    std::vector<lox::Token> tokens;
+    while(!scanner.is_end()) {
+        scanner.start_ = scanner.current_;
+        if (auto token = scanner.scan_token()) {
+            tokens.push_back(std::move(*token));
+        }
     }
 
-    if (program_.at(current_) != c) {
-        return false;
-    }
-
-    current_++;
-    return true;
+    tokens.emplace_back(TokenType::END, std::monostate(), scanner.line_);
+    return tokens;
 }
-
-bool Scanner::is_end() const {
-    return current_ >= program_.size();
 }
-

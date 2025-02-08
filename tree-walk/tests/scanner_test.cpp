@@ -3,11 +3,6 @@
 #include "lox/scanner.h"
 
 namespace {
-auto tokenize(std::string&& program) {
-    lox::Scanner scanner(std::move(program));
-    return scanner.scan_tokens();
-}
-
 void compare_tokens(std::vector<lox::Token>&& output_tokens, std::vector<lox::Token>&& correct_tokens) {
     EXPECT_EQ(output_tokens.size(), correct_tokens.size());
     for (int i = 0; i < output_tokens.size(); i++) {
@@ -51,7 +46,7 @@ TEST(ScannerTest, SingleCharacterTokens) {
         {lox::TokenType::END, 6},
     };
 
-    compare_tokens(tokenize(std::move(test_str)), std::move(correct_tokens));
+    compare_tokens(lox::scan_tokens(std::move(test_str)), std::move(correct_tokens));
 }
 
 TEST(ScannerTest, OneOrTwoCharacterTokens) {
@@ -74,7 +69,7 @@ TEST(ScannerTest, OneOrTwoCharacterTokens) {
         {lox::TokenType::END, 6},
     };
 
-    compare_tokens(tokenize(std::move(test_str)), std::move(correct_tokens));
+    compare_tokens(lox::scan_tokens(std::move(test_str)), std::move(correct_tokens));
 }
 
 TEST(ScannerTest, Literals) {
@@ -99,7 +94,7 @@ a;     // and this is an identifier
         {lox::TokenType::END, 7}
     };
 
-    compare_tokens(tokenize(std::move(test_str)), std::move(correct_tokens));
+    compare_tokens(lox::scan_tokens(std::move(test_str)), std::move(correct_tokens));
 }
 
 TEST(ScannerTest, Keywords) {
@@ -128,7 +123,7 @@ or print return super this true var while
         {lox::TokenType::END, 4},
     };
 
-    compare_tokens(tokenize(std::move(test_str)), std::move(correct_tokens));
+    compare_tokens(lox::scan_tokens(std::move(test_str)), std::move(correct_tokens));
 }
 
 /*
@@ -147,7 +142,7 @@ false; // Not *not* false.
         {lox::TokenType::END, 4},
     };
 
-    compare_tokens(tokenize(std::move(bool_test)), std::move(correct_tokens));
+    compare_tokens(lox::scan_tokens(std::move(bool_test)), std::move(correct_tokens));
 }
 
 TEST(ScannerTest, HelloWorld) {
@@ -163,7 +158,7 @@ print "Hello, world!";
         {lox::TokenType::END, 4}
     };
 
-    compare_tokens(tokenize(std::move(test_str)), std::move(correct_tokens));
+    compare_tokens(lox::scan_tokens(std::move(test_str)), std::move(correct_tokens));
 }
 
 TEST(ScannerTest, Classes) {
@@ -185,7 +180,7 @@ class Breakfast {
         {lox::TokenType::END, 4}
     };
 
-    compare_tokens(tokenize(std::move(test_str)), std::move(correct_tokens));
+    compare_tokens(lox::scan_tokens(std::move(test_str)), std::move(correct_tokens));
 }
 
 TEST(ScannerTest, ClassMethodCall) {
@@ -202,5 +197,5 @@ TEST(ScannerTest, ClassMethodCall) {
         {lox::TokenType::END, 1},
     };
 
-    compare_tokens(tokenize(std::move(test_str)), std::move(correct_tokens));
+    compare_tokens(lox::scan_tokens(std::move(test_str)), std::move(correct_tokens));
 }

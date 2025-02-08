@@ -16,9 +16,7 @@ static lox::Interpreter interpreter;
 
 void run(std::string&& command)
 {
-    lox::Scanner scanner(std::move(command));
-
-    auto tokens = scanner.scan_tokens();
+    auto tokens = lox::scan_tokens(std::move(command));
     //std::for_each(tokens.cbegin(), tokens.cend(), [](const auto& t) { fmt::print("{}\n", t.stringify_token()); });
 
     lox::Parser parser(std::move(tokens));
